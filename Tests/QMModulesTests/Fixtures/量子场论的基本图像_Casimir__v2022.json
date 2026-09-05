@@ -1,0 +1,49 @@
+{
+ "script": "量子场论的基本图像_Casimir.py",
+ "codata_version": "2022",
+ "status": "ok",
+ "error": null,
+ "runtime_s": 0.105,
+ "asserts": [],
+ "figures": [
+  {
+   "file": "量子场论的基本图像_Casimir.svg",
+   "axes": [
+    {
+     "title": "(a) Casimir pressure vs separation (slope -4)",
+     "xlabel": "plate separation d (μm)",
+     "ylabel": "|Casimir pressure| |F|/A (N/m^2)",
+     "xscale": "log",
+     "yscale": "log",
+     "lines": [],
+     "scatters": [],
+     "bars": []
+    },
+    {
+     "title": "(b) Local power-law exponent",
+     "xlabel": "plate separation d (μm)",
+     "ylabel": "local slope d ln P / d ln d",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [
+      {
+       "label": "ideal exponent -4",
+       "x": [
+        0.0,
+        1.0
+       ],
+       "y": [
+        -4.0,
+        -4.0
+       ],
+       "color": "r",
+       "ls": "--"
+      }
+     ],
+     "scatters": [],
+     "bars": []
+    }
+   ]
+  }
+ ]
+}

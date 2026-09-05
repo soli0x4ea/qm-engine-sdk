@@ -1,0 +1,66 @@
+{
+ "script": "希尔伯特空间与狄拉克符号_Bloch球.py",
+ "codata_version": "2022",
+ "status": "ok",
+ "error": null,
+ "runtime_s": 0.028,
+ "asserts": [],
+ "figures": [
+  {
+   "file": "希尔伯特空间与狄拉克符号_Bloch球.svg",
+   "axes": [
+    {
+     "title": "Bloch sphere: 2-dim Hilbert space state",
+     "xlabel": "x",
+     "ylabel": "y",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [],
+     "scatters": [
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        0.612372436
+       ],
+       "y": [
+        0.612372436
+       ]
+      }
+     ],
+     "bars": []
+    }
+   ]
+  }
+ ]
+}

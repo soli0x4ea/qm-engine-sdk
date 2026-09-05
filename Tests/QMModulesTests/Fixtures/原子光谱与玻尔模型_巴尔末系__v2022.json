@@ -1,0 +1,147 @@
+{
+ "script": "原子光谱与玻尔模型_巴尔末系.py",
+ "codata_version": "2022",
+ "status": "ok",
+ "error": null,
+ "runtime_s": 0.042,
+ "asserts": [
+  {
+   "line": 34,
+   "expr": "abs(R_H - 10967758.340) / 10967758.340 < 1e-5",
+   "ok": true,
+   "literals": [
+    1e-05,
+    10967758.34,
+    10967758.34
+   ]
+  },
+  {
+   "line": 43,
+   "expr": "rel < 1e-3",
+   "ok": true,
+   "literals": [
+    0.001
+   ]
+  },
+  {
+   "line": 43,
+   "expr": "rel < 1e-3",
+   "ok": true,
+   "literals": [
+    0.001
+   ]
+  },
+  {
+   "line": 43,
+   "expr": "rel < 1e-3",
+   "ok": true,
+   "literals": [
+    0.001
+   ]
+  },
+  {
+   "line": 43,
+   "expr": "rel < 1e-3",
+   "ok": true,
+   "literals": [
+    0.001
+   ]
+  }
+ ],
+ "figures": [
+  {
+   "file": "原子光谱与玻尔模型_巴尔末系.svg",
+   "axes": [
+    {
+     "title": "Balmer series of hydrogen (Bohr model, R_H reduced-mass)",
+     "xlabel": "wavelength (nm, vacuum)",
+     "ylabel": "",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [],
+     "scatters": [
+      {
+       "x": [
+        656.469606,
+        486.273782,
+        434.17302,
+        410.293504
+       ],
+       "y": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+       ]
+      }
+     ],
+     "bars": []
+    }
+   ]
+  },
+  {
+   "file": "原子光谱与玻尔模型_能级图.svg",
+   "axes": [
+    {
+     "title": "Hydrogen energy levels E_n = −13.598 eV / n²",
+     "xlabel": "",
+     "ylabel": "energy E_n (eV, n=1..6)",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [],
+     "scatters": [
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      }
+     ],
+     "bars": []
+    }
+   ]
+  }
+ ]
+}

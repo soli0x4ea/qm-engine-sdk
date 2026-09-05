@@ -1,0 +1,120 @@
+{
+ "script": "多电子原子_Zeff与电离能.py",
+ "codata_version": "2022",
+ "status": "ok",
+ "error": null,
+ "runtime_s": 0.041,
+ "asserts": [],
+ "figures": [
+  {
+   "file": "多电子原子_Zeff趋势.svg",
+   "axes": [
+    {
+     "title": "Slater Z_eff of valence electron",
+     "xlabel": "Atomic number Z",
+     "ylabel": "Effective nuclear charge Z_eff",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [],
+     "scatters": [],
+     "bars": []
+    }
+   ]
+  },
+  {
+   "file": "多电子原子_电离能周期.svg",
+   "axes": [
+    {
+     "title": "Periodicity of first ionization energy",
+     "xlabel": "Atomic number Z",
+     "ylabel": "First ionization energy (eV)",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [
+      {
+       "label": "I1(Z)",
+       "x": [
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        5.0,
+        6.0,
+        7.0,
+        8.0,
+        9.0,
+        10.0,
+        11.0,
+        12.0,
+        13.0,
+        14.0,
+        15.0,
+        16.0,
+        17.0,
+        18.0,
+        19.0,
+        20.0
+       ],
+       "y": [
+        13.598,
+        24.587,
+        5.392,
+        9.323,
+        8.298,
+        11.26,
+        14.534,
+        13.618,
+        17.423,
+        21.565,
+        5.139,
+        7.646,
+        5.986,
+        8.152,
+        10.487,
+        10.36,
+        12.968,
+        15.76,
+        4.341,
+        6.113
+       ],
+       "color": "#0b6e4f",
+       "ls": "-"
+      },
+      {
+       "label": "noble gas (peak)",
+       "x": [
+        2.0,
+        10.0,
+        18.0
+       ],
+       "y": [
+        24.587,
+        21.565,
+        15.76
+       ],
+       "color": "r",
+       "ls": "None"
+      },
+      {
+       "label": "alkali (valley)",
+       "x": [
+        3.0,
+        11.0,
+        19.0
+       ],
+       "y": [
+        5.392,
+        5.139,
+        4.341
+       ],
+       "color": "k",
+       "ls": "None"
+      }
+     ],
+     "scatters": [],
+     "bars": []
+    }
+   ]
+  }
+ ]
+}

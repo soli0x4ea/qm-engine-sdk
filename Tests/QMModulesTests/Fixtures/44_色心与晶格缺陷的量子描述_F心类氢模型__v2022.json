@@ -1,0 +1,118 @@
+{
+ "script": "44_色心与晶格缺陷的量子描述_F心类氢模型.py",
+ "codata_version": "2022",
+ "status": "ok",
+ "error": null,
+ "runtime_s": 0.082,
+ "asserts": [],
+ "figures": [
+  {
+   "file": "44_色心与晶格缺陷的量子描述_F心能级.svg",
+   "axes": [
+    {
+     "title": "F-center hydrogenic levels (KCl)\n$a^*=2.22\\,a_0$,  $R^*=2.76$ eV",
+     "xlabel": "",
+     "ylabel": "Energy (eV)",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [],
+     "scatters": [
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      }
+     ],
+     "bars": []
+    }
+   ]
+  },
+  {
+   "file": "44_色心与晶格缺陷的量子描述_F心波长对比.svg",
+   "axes": [
+    {
+     "title": "F-center 1s->2p transition: hydrogenic-model vs experimental F-band",
+     "xlabel": "",
+     "ylabel": "F-band wavelength (nm)",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [],
+     "scatters": [],
+     "bars": [
+      {
+       "x": -0.19,
+       "height": 452.583818,
+       "width": 0.38
+      },
+      {
+       "x": 0.81,
+       "height": 367.860283,
+       "width": 0.38
+      },
+      {
+       "x": 1.81,
+       "height": 688.237477,
+       "width": 0.38
+      },
+      {
+       "x": 2.81,
+       "height": 598.811804,
+       "width": 0.38
+      },
+      {
+       "x": 3.81,
+       "height": 717.458774,
+       "width": 0.38
+      },
+      {
+       "x": 4.81,
+       "height": 853.249715,
+       "width": 0.38
+      },
+      {
+       "x": 0.19,
+       "height": 244.063383,
+       "width": 0.38
+      },
+      {
+       "x": 1.19,
+       "height": 335.092428,
+       "width": 0.38
+      },
+      {
+       "x": 2.19,
+       "height": 450.851631,
+       "width": 0.38
+      },
+      {
+       "x": 3.19,
+       "height": 539.061732,
+       "width": 0.38
+      },
+      {
+       "x": 4.19,
+       "height": 601.865041,
+       "width": 0.38
+      },
+      {
+       "x": 5.19,
+       "height": 663.017104,
+       "width": 0.38
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

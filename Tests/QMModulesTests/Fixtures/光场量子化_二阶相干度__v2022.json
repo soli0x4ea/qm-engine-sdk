@@ -1,0 +1,90 @@
+{
+ "script": "光场量子化_二阶相干度.py",
+ "codata_version": "2022",
+ "status": "ok",
+ "error": null,
+ "runtime_s": 0.096,
+ "asserts": [],
+ "figures": [
+  {
+   "file": "光场量子化_二阶相干度.svg",
+   "axes": [
+    {
+     "title": "Second-order coherence at zero delay",
+     "xlabel": "",
+     "ylabel": "$g^{(2)}(0)$",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [],
+     "scatters": [],
+     "bars": [
+      {
+       "x": 0.0,
+       "height": 1.0,
+       "width": 0.8
+      },
+      {
+       "x": 1.0,
+       "height": 1.99999986,
+       "width": 0.8
+      }
+     ]
+    },
+    {
+     "title": "Wigner function of squeezed vacuum (r=1)",
+     "xlabel": "x (squeezed quadrature)",
+     "ylabel": "p (anti-squeezed quadrature)",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [],
+     "scatters": [
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      }
+     ],
+     "bars": []
+    },
+    {
+     "title": "",
+     "xlabel": "",
+     "ylabel": "W(x,p)",
+     "xscale": "linear",
+     "yscale": "function",
+     "lines": [],
+     "scatters": [
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      }
+     ],
+     "bars": []
+    }
+   ]
+  }
+ ]
+}

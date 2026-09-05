@@ -1,0 +1,108 @@
+{
+  "schema": "materialdb/v1",
+  "generated": "2026-09-05T00:19:55Z",
+  "provenance": {
+    "crystalField": {
+      "script": "43_过渡金属离子致色的量子机制_模型.py",
+      "sha256_16": "78de8ca713ae66f9"
+    },
+    "fCenter": {
+      "script": "44_色心与晶格缺陷的量子描述_F心类氢模型.py",
+      "sha256_16": "982d0a5e79c6e85a"
+    },
+    "raman": {
+      "script": "45_光谱学仪器的量子基础_拉曼谱.py",
+      "sha256_16": "83f2a37d877eda67"
+    }
+  },
+  "crystalFieldMinerals": [
+    {
+      "id": "ruby",
+      "name": "Ruby",
+      "short": "Ruby",
+      "ion": "Cr3+",
+      "host": "Al2O3",
+      "delta_cm": 18000.0
+    },
+    {
+      "id": "emerald",
+      "name": "Emerald",
+      "short": "Emerald",
+      "ion": "Cr3+",
+      "host": "Be3Al2Si6O18",
+      "delta_cm": 16500.0
+    },
+    {
+      "id": "peridot",
+      "name": "Peridot",
+      "short": "Peridot",
+      "ion": "Fe2+",
+      "host": "olivine",
+      "delta_cm": 9524.0
+    }
+  ],
+  "fCenterHalides": [
+    {
+      "id": "LiF",
+      "name": "LiF",
+      "eps_inf": 1.93,
+      "f_band_exp_eV": 5.08,
+      "lattice_A": 4.03
+    },
+    {
+      "id": "NaF",
+      "name": "NaF",
+      "eps_inf": 1.74,
+      "f_band_exp_eV": 3.7,
+      "lattice_A": 4.63
+    },
+    {
+      "id": "NaCl",
+      "name": "NaCl",
+      "eps_inf": 2.38,
+      "f_band_exp_eV": 2.75,
+      "lattice_A": 5.64
+    },
+    {
+      "id": "KCl",
+      "name": "KCl",
+      "eps_inf": 2.22,
+      "f_band_exp_eV": 2.3,
+      "lattice_A": 6.29
+    },
+    {
+      "id": "KBr",
+      "name": "KBr",
+      "eps_inf": 2.43,
+      "f_band_exp_eV": 2.06,
+      "lattice_A": 6.6
+    },
+    {
+      "id": "KI",
+      "name": "KI",
+      "eps_inf": 2.65,
+      "f_band_exp_eV": 1.87,
+      "lattice_A": 7.07
+    }
+  ],
+  "ramanModes": [
+    {
+      "id": "mode_a",
+      "name": "mode A (illustrative)",
+      "nu_v_cm": 520.0,
+      "fwhm_cm": 10.0
+    },
+    {
+      "id": "diamond_raman",
+      "name": "diamond Raman (1332)",
+      "nu_v_cm": 1332.0,
+      "fwhm_cm": 6.0
+    },
+    {
+      "id": "mode_c",
+      "name": "mode C (illustrative)",
+      "nu_v_cm": 2900.0,
+      "fwhm_cm": 14.0
+    }
+  ]
+}

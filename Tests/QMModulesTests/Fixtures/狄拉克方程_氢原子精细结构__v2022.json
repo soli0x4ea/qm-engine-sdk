@@ -1,0 +1,102 @@
+{
+ "script": "狄拉克方程_氢原子精细结构.py",
+ "codata_version": "2022",
+ "status": "ok",
+ "error": null,
+ "runtime_s": 0.016,
+ "asserts": [],
+ "figures": [
+  {
+   "file": "狄拉克方程_氢原子精细结构.svg",
+   "axes": [
+    {
+     "title": "Hydrogen levels: Dirac vs Schrodinger (Z=1)",
+     "xlabel": "",
+     "ylabel": "binding energy offset $E-m_ec^2$ (eV)",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [
+      {
+       "label": "$1S_{1/2}$ (Dirac)",
+       "x": [
+        0.6,
+        1.4
+       ],
+       "y": [
+        -13.6058743,
+        -13.6058743
+       ],
+       "color": "r",
+       "ls": "-"
+      },
+      {
+       "label": "$2S_{1/2},2P_{1/2}$ (Dirac)",
+       "x": [
+        0.6,
+        1.4
+       ],
+       "y": [
+        -3.40147989,
+        -3.40147989
+       ],
+       "color": "r",
+       "ls": "-"
+      },
+      {
+       "label": "$n=2$ Schrodinger (degenerate)",
+       "x": [
+        1.6,
+        2.4
+       ],
+       "y": [
+        -3.40142328,
+        -3.40142328
+       ],
+       "color": "b",
+       "ls": "--"
+      }
+     ],
+     "scatters": [],
+     "bars": []
+    },
+    {
+     "title": "$n=2$ fine-structure splitting",
+     "xlabel": "level (schematic)",
+     "ylabel": "$E-m_ec^2$ (eV)  [zoom]",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [
+      {
+       "label": "$2S_{1/2}=2P_{1/2}$ (Dirac)",
+       "x": [
+        0.6,
+        1.4
+       ],
+       "y": [
+        -3.40147989,
+        -3.40147989
+       ],
+       "color": "r",
+       "ls": "-"
+      },
+      {
+       "label": "$2P_{3/2}$ (Dirac)",
+       "x": [
+        0.6,
+        1.4
+       ],
+       "y": [
+        -3.4014346,
+        -3.4014346
+       ],
+       "color": "r",
+       "ls": "-"
+      }
+     ],
+     "scatters": [],
+     "bars": []
+    }
+   ]
+  }
+ ]
+}

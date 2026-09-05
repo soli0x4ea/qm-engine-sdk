@@ -1,0 +1,81 @@
+{
+ "script": "半导体_载流子与pn结.py",
+ "codata_version": "2022",
+ "status": "ok",
+ "error": null,
+ "runtime_s": 0.106,
+ "asserts": [],
+ "figures": [
+  {
+   "file": "半导体_载流子浓度随温度.svg",
+   "axes": [
+    {
+     "title": "Intrinsic carrier concentration of Si vs T",
+     "xlabel": "Temperature T (K)",
+     "ylabel": "Intrinsic carrier density $n_i$ (cm$^{-3}$)",
+     "xscale": "linear",
+     "yscale": "log",
+     "lines": [
+      {
+       "label": "T = 300 K",
+       "x": [
+        300.0,
+        300.0
+       ],
+       "y": [
+        0.0,
+        1.0
+       ],
+       "color": "#c0392b",
+       "ls": "--"
+      }
+     ],
+     "scatters": [],
+     "bars": []
+    }
+   ]
+  },
+  {
+   "file": "半导体_pn结IV.svg",
+   "axes": [
+    {
+     "title": "Ideal p-n junction I-V (Shockley equation)",
+     "xlabel": "Applied voltage V (V)",
+     "ylabel": "|Diode current| I (A)",
+     "xscale": "linear",
+     "yscale": "log",
+     "lines": [
+      {
+       "label": "I_s = 1e-12 A",
+       "x": [
+        0.0,
+        1.0
+       ],
+       "y": [
+        1e-12,
+        1e-12
+       ],
+       "color": "#7f8c8d",
+       "ls": ":"
+      },
+      {
+       "label": "turn-on ~0.7 V",
+       "x": [
+        0.7,
+        0.7
+       ],
+       "y": [
+        0.0,
+        1.0
+       ],
+       "color": "#c0392b",
+       "ls": "--"
+      }
+     ],
+     "scatters": [],
+     "bars": []
+    }
+   ]
+  }
+ ]
+}

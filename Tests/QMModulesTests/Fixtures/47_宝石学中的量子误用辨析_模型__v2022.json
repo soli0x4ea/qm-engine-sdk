@@ -1,0 +1,152 @@
+{
+ "script": "47_宝石学中的量子误用辨析_模型.py",
+ "codata_version": "2022",
+ "status": "ok",
+ "error": null,
+ "runtime_s": 0.048,
+ "asserts": [],
+ "figures": [
+  {
+   "file": "47_宝石学中的量子误用辨析_图1.svg",
+   "axes": [
+    {
+     "title": "After linear birefringence\nsingle photon: PURE separable (|r|=1)",
+     "xlabel": "",
+     "ylabel": "",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [],
+     "scatters": [
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        6.123234e-17
+       ],
+       "y": [
+        1.0
+       ]
+      }
+     ],
+     "bars": []
+    },
+    {
+     "title": "Reduced state of entangled pair\nmaximally MIXED (center)",
+     "xlabel": "",
+     "ylabel": "",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [],
+     "scatters": [
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      }
+     ],
+     "bars": []
+    }
+   ]
+  },
+  {
+   "file": "47_宝石学中的量子误用辨析_图2.svg",
+   "axes": [
+    {
+     "title": "Ruby Cr3+ level scheme: sharp R emission vs broad blue-green absorption",
+     "xlabel": "",
+     "ylabel": "Energy (cm⁻¹)",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [],
+     "scatters": [
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      },
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      }
+     ],
+     "bars": [
+      {
+       "x": 1.2,
+       "height": 18000.0,
+       "width": 0.36
+      },
+      {
+       "x": 1.2,
+       "height": 25000.0,
+       "width": 0.36
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

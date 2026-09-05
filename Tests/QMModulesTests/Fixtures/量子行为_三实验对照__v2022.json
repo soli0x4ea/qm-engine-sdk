@@ -1,0 +1,132 @@
+{
+ "script": "量子行为_三实验对照.py",
+ "codata_version": "2022",
+ "status": "ok",
+ "error": null,
+ "runtime_s": 0.078,
+ "asserts": [
+  {
+   "line": 81,
+   "expr": "abs(xmax) < 0.01",
+   "ok": true,
+   "literals": [
+    0.01
+   ]
+  },
+  {
+   "line": 82,
+   "expr": "abs(first_min - expected) < 0.05",
+   "ok": true,
+   "literals": [
+    0.05
+   ]
+  },
+  {
+   "line": 98,
+   "expr": "central_min_frac > 0.05",
+   "ok": true,
+   "literals": [
+    0.05
+   ]
+  },
+  {
+   "line": 104,
+   "expr": "P_electron[i_min] < 1e-3",
+   "ok": true,
+   "literals": [
+    0.001
+   ]
+  },
+  {
+   "line": 105,
+   "expr": "P_watched[i_min] > 0.05",
+   "ok": true,
+   "literals": [
+    0.05
+   ]
+  }
+ ],
+ "figures": [
+  {
+   "file": "量子行为_三实验对照.svg",
+   "axes": [
+    {
+     "title": "A: bullets  (P12 = P1 + P2, no phase structure)",
+     "xlabel": "",
+     "ylabel": "probability density",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [],
+     "scatters": [
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      }
+     ],
+     "bars": []
+    },
+    {
+     "title": "B: two incoherent wave sources (I12 = I1 + I2)",
+     "xlabel": "",
+     "ylabel": "probability density",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [],
+     "scatters": [
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      }
+     ],
+     "bars": []
+    },
+    {
+     "title": "C: electrons (P12 = |phi1 + phi2|^2, interference)",
+     "xlabel": "",
+     "ylabel": "probability density",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [],
+     "scatters": [
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      }
+     ],
+     "bars": []
+    },
+    {
+     "title": "D: electrons watched (P12 = P1 + P2, which-way info)",
+     "xlabel": "screen position x (natural units, fringe spacing = 1)",
+     "ylabel": "probability density",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [],
+     "scatters": [
+      {
+       "x": [
+        0.0
+       ],
+       "y": [
+        0.0
+       ]
+      }
+     ],
+     "bars": []
+    }
+   ]
+  }
+ ]
+}

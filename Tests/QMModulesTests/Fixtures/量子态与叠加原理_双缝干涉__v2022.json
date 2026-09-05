@@ -1,0 +1,25 @@
+{
+ "script": "量子态与叠加原理_双缝干涉.py",
+ "codata_version": "2022",
+ "status": "ok",
+ "error": null,
+ "runtime_s": 0.028,
+ "asserts": [],
+ "figures": [
+  {
+   "file": "量子态与叠加原理_双缝干涉.svg",
+   "axes": [
+    {
+     "title": "Two-slit interference: I(x)=4 I0 cos^2(pi d x / (lambda L))",
+     "xlabel": "Screen position x (mm)",
+     "ylabel": "Relative intensity I(x) / I0",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [],
+     "scatters": [],
+     "bars": []
+    }
+   ]
+  }
+ ]
+}

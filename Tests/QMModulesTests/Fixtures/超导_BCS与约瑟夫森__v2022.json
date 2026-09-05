@@ -1,0 +1,54 @@
+{
+ "script": "超导_BCS与约瑟夫森.py",
+ "codata_version": "2022",
+ "status": "ok",
+ "error": null,
+ "runtime_s": 0.078,
+ "asserts": [],
+ "figures": [
+  {
+   "file": "超导_BCS能隙.svg",
+   "axes": [
+    {
+     "title": "BCS order parameter vs temperature",
+     "xlabel": "$T/T_c$",
+     "ylabel": "$\\Delta(T)/\\Delta(0)$",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [
+      {
+       "label": "$T/T_c=1$",
+       "x": [
+        1.0,
+        1.0
+       ],
+       "y": [
+        0.0,
+        1.0
+       ],
+       "color": "#c0392b",
+       "ls": "--"
+      }
+     ],
+     "scatters": [],
+     "bars": []
+    }
+   ]
+  },
+  {
+   "file": "超导_约瑟夫森Fraunhofer.svg",
+   "axes": [
+    {
+     "title": "Josephson junction critical current (Fraunhofer)",
+     "xlabel": "Applied flux $\\Phi/\\Phi_0$",
+     "ylabel": "$I_c(\\Phi)/I_{c0}$",
+     "xscale": "linear",
+     "yscale": "linear",
+     "lines": [],
+     "scatters": [],
+     "bars": []
+    }
+   ]
+  }
+ ]
+}
