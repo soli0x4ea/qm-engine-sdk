@@ -1,6 +1,6 @@
 # qm-engine-sdk
 
-A self-contained Swift package of **63 quantum-mechanics simulation modules** with a high-performance numeric engine, extracted from the parent QM project (where the reference Python sources and the companion iOS app live). MIT licensed — see [LICENSE](LICENSE) for the "no copyright under AI" note (中文说明在 LICENSE 文件内).
+A self-contained Swift package of **63 quantum-mechanics simulation modules** with a high-performance numeric engine, extracted from the parent QM project (where the reference Python sources and the companion iOS app live). MIT licensed.
 
 - **Products**: `EngineKit` (numeric engine) + `QMModules` (simulation module library)
 - **Platforms**: iOS 17+ / macOS 14+
@@ -67,4 +67,4 @@ Tests/QMModulesTests/  module physics-law tests, budget tests, performance audit
 
 ## License
 
-MIT. The full text is in [LICENSE](LICENSE), which opens with a bilingual note on intent: the code is AI-generated and claims no copyright ("AI 之下无版权 / no copyright under AI") — MIT is chosen precisely because it grants maximum freedom.
+MIT — the full text is in [LICENSE](LICENSE).
