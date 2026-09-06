@@ -294,7 +294,7 @@ struct ColorCenterModuleTests {
                                            budgetMillis: 2000)
     }
 
-    @Test("W13h #44：波长域模式——x 换算 λ = hc/E 且全部落在可见光窗 380–780 nm")
+    @Test("W13j #44：波长域模式——x 换算 λ = hc/E 且全部落在 300–700 nm 窗")
     func electronPhononNanometerMode() async throws {
         let module = ElectronPhononAbsorptionModule()
         var values = ParamValues.defaults(for: module.params)
@@ -304,7 +304,7 @@ struct ColorCenterModuleTests {
         #expect(chart.series.count == 2)
         for s in chart.series {
             #expect(!s.points.isEmpty, "默认 NV 参数（ZPL=1.945 eV ≈ 637 nm）窗内应有谱")
-            #expect(s.points.allSatisfy { (380.0...780.0).contains($0.x) },
+            #expect(s.points.allSatisfy { (300.0...700.0).contains($0.x) },
                     "全部点在可见光窗内")
             // 换算自洽：x = 1239.841984/E 仅当 y 对应同一 E 网格——抽查能量域
             for p in s.points where abs(p.x - 637.1) < 3.0 {

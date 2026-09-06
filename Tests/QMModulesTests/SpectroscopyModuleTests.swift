@@ -6,7 +6,7 @@ import Foundation
 /// W7 笔记 45《光谱学仪器的量子基础》：爱因斯坦 A 系数与荧光寿命 / 拉曼 Stokes–anti-Stokes 谱。
 /// fixtures：45_光谱学仪器的量子基础_荧光与寿命__v2022.json（衰减双线 400 点，同网格；
 /// 双轴 A(λ)/τ(λ) 图未导出数据，仅结构核对）、45_光谱学仪器的量子基础_拉曼谱__v2022.json
-///（512 点，模块 60001 点 → 重采样对拍）。
+///（512 点，模块 8001 点 → 重采样对拍）。
 @Suite("W7 笔记45 光谱学仪器的量子基础")
 struct SpectroscopyModuleTests {
 
@@ -125,7 +125,7 @@ struct SpectroscopyModuleTests {
         let result = try await module.compute(
             ParamValues.defaults(for: module.params), constants: try constants())
         let chart = try #require(chartLineSeries(result, 0))
-        #expect(chart.series[0].points.count == 60001)
+        #expect(chart.series[0].points.count == 8001)
         let xs = chart.series[0].points.map(\.x)
         let ys = chart.series[0].points.map(\.y)
         // W13h #45：x 轴为拉曼位移 Δν = ν散射 − ν₀，域 [−3000, +3000]
@@ -147,9 +147,10 @@ struct SpectroscopyModuleTests {
         #expect(stokes.count == 3 && anti.count == 3)
         for i in 0..<3 {
             let nuV = modes.sorted { $0.nuVcm < $1.nuVcm }[i].nuVcm
-            #expect(abs((-stokes[i].x) - nuV) < 0.2,
+            // W13j：网格 8001 点 → 步长 0.75 cm⁻¹，峰位量化误差 ≤ 半步 0.375
+            #expect(abs((-stokes[i].x) - nuV) < 0.4,
                     "第 \(i) 条 Stokes 位移 \(-stokes[i].x) 应为 ν_v = \(nuV)")
-            #expect(abs(anti[i].x - nuV) < 0.2,
+            #expect(abs(anti[i].x - nuV) < 0.4,
                     "第 \(i) 条 anti-Stokes 位移 \(anti[i].x) 应为 ν_v = \(nuV)")
             // 强度比：anti-Stokes/Stokes = (ν_AS/ν_S)⁴·n_v/(n_v+1)。
             // 弱 anti-Stokes 峰（尤其 ν_v=2900）坐在最强模式的洛伦兹拖尾上，直接取模块谱
@@ -240,7 +241,7 @@ struct SpectroscopyModuleTests {
         }
     }
 
-    @Test("fixtures：拉曼谱 512 点（计算核求值 < 1e-6；60001 点重采样 < 2e-2，跳过峰芯 ±15 FWHM）")
+    @Test("fixtures：拉曼谱 512 点（计算核求值 < 1e-6；8001 点重采样 < 2e-2，跳过峰芯 ±15 FWHM）")
     func ramanMatchesFixture() async throws {
         let k = try constants()
         let c = try k.value("c"), hbar = try k.value("hbar"), kB = try k.value("kB")
@@ -302,7 +303,7 @@ struct SpectroscopyModuleTests {
                                            budgetMillis: 16)
     }
 
-    @Test("compute 结构：拉曼谱 1 图 60001 点 + 3 参考线 + 4 摘要（秒级档）")
+    @Test("compute 结构：拉曼谱 1 图 8001 点 + 3 参考线 + 4 摘要（秒级档）")
     func ramanStructureAndTiming() async throws {
         let module = RamanSpectrumModule()
         let values = ParamValues.defaults(for: module.params)
@@ -310,7 +311,7 @@ struct SpectroscopyModuleTests {
         #expect(result.charts.count == 1)
         let chart = try #require(chartLineSeries(result, 0))
         #expect(chart.series.count == 1)
-        #expect(chart.series[0].points.count == 60001)
+        #expect(chart.series[0].points.count == 8001)
         #expect(chart.referenceLines.count == 3, "瑞利线 + 金刚石 Stokes/anti-Stokes")
         #expect(result.summary.count == 4)
         #expect(result.theory?.formulas.count == 4)

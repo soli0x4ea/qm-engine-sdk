@@ -185,12 +185,12 @@ struct ElectronPhononAbsorptionModule: SimModule {
                               range: 1.0...3.0, defaultValue: 1.945,
                               scale: .linear, decimalPlaces: 3)),
             // W13h #44：X 轴可选波长域——NV 色心（钻石）谱在能量域一半落在红外，
-            // 波长域下可见光区（380–780 nm）一目了然
+            // 波长域下近紫外—可见区（300–700 nm，覆盖 NV ZPL 637 与激发侧特征）一目了然
             .discrete(DiscreteSpec(
                 key: "xmode", title: "X 轴模式",
                 options: [
                     .init(id: "ev", title: "能量域 E (eV)", subtitle: "脚本口径，ZPL ± 10ħω 全窗"),
-                    .init(id: "nm", title: "波长域 λ (nm)", subtitle: "可见光区 380–780 nm 显示"),
+                    .init(id: "nm", title: "波长域 λ (nm)", subtitle: "近紫外—可见区 300–700 nm 显示（少爷 W13j 口径）"),
                 ],
                 defaultOptionID: "ev")),
         ]
@@ -220,7 +220,7 @@ struct ElectronPhononAbsorptionModule: SimModule {
         let absSpec = ColorCenterMath.buildSpectrum(E, E_ZPL: eZPL, S: S, hw: hw, gamma: gamma, sign: +1)
         let emiSpec = ColorCenterMath.buildSpectrum(E, E_ZPL: eZPL, S: S, hw: hw, gamma: gamma, sign: -1)
 
-        // W13h #44：波长域模式——x 换算 λ = hc/E 并裁剪到可见光窗（380–780 nm）
+        // W13h #44 + W13j #44：波长域模式——x 换算 λ = hc/E 并裁剪到 300–700 nm 窗
         let xAxisLabel: String
         var absPts = Num.strided(E, absSpec, stride: 1)
         var emiPts = Num.strided(E, emiSpec, stride: 1)
@@ -230,12 +230,12 @@ struct ElectronPhononAbsorptionModule: SimModule {
                 pts.compactMap { p in
                     p.x > 0 ? Point(x: ColorCenterMath.hcEVnm / p.x, y: p.y) : nil
                 }
-                .filter { (380.0...780.0).contains($0.x) }
+                .filter { (300.0...700.0).contains($0.x) }
             }
             absPts = toNm(absPts)
             emiPts = toNm(emiPts)
             zplRef = ColorCenterMath.hcEVnm / eZPL
-            xAxisLabel = "波长 λ (nm)（可见光区 380–780）"
+            xAxisLabel = "波长 λ (nm)（近紫外—可见 300–700）"
         } else {
             xAxisLabel = "光子能量 E (eV)"
         }

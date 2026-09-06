@@ -234,10 +234,12 @@ struct RamanSpectrumModule: SimModule {
 
         let modes = db.ramanModes.map { (nuV: $0.nuVcm, fwhm: $0.fwhmCm) }
         let shiftMax = 3000.0
+        // W13j #45：60001 → 8001 点（0.75 cm⁻¹ 步长，最窄 FWHM=6 仍有 8 采样），
+        // 6 万 LineMark 在 iOS 真机渲染过重；峰形由 ChartKit 显式域保证满幅。
         // W13h #45：x 轴改「拉曼位移 Δν = ν散射 − ν₀」——绝对波数轴随 λ₀ 平移、
         // 刻度值无物理含义；位移轴下 Rayleigh 恒在 0、Stokes/anti-Stokes 恒在 ∓ν_v。
         // λ₀ 的影响保留在 ν⁴ 权重（anti/Stokes 强度比随 λ₀ 微变）。
-        let shifts = Num.linspace(-shiftMax, shiftMax, count: 60001)
+        let shifts = Num.linspace(-shiftMax, shiftMax, count: 8001)
         let xsAbs = shifts.map { nu0 + $0 }
         let spec = SpectroscopyMath.ramanSpectrum(xsAbs, nu0: nu0, c_cm: c_cm,
                                                  hbar: hbar, kB: kB, T: T, modes: modes)
