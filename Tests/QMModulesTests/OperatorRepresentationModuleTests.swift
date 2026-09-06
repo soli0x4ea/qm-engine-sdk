@@ -99,7 +99,7 @@ struct OperatorRepresentationModuleTests {
         #expect(strong + noise == fxp.count)
     }
 
-    @Test("compute 输出结构：双图（512 点位置 + 截窗动量）+ 摘要 4 项 + 理论卡")
+    @Test("compute 输出结构：双图（显示窗 ±12/±3，W13g）+ 摘要 4 项 + 理论卡")
     func computeStructure() async throws {
         let module = OperatorRepresentationModule()
         let result = try await module.compute(
@@ -110,9 +110,13 @@ struct OperatorRepresentationModuleTests {
             Issue.record("应为两个 lineSeries"); return
         }
         #expect(pos.series.count == 1)
-        #expect(pos.series[0].points.count == 512)      // 4096 / 8
+        // 脚本 xlim ±12（W13g #12：全域 ±20 把高斯压成窄条）→ stride 8 后 24/0.078 ≈ 307 点
+        #expect(pos.series[0].points.count >= 290 && pos.series[0].points.count <= 320,
+                "位置曲线点数 \(pos.series[0].points.count)")
+        #expect(pos.series[0].points.allSatisfy { abs($0.x) <= 12.0 })
         #expect(mom.series.count == 1)
-        #expect(mom.series[0].points.count >= 32)       // |p| ≤ 4 截窗
+        #expect(mom.series[0].points.count >= 32)       // 脚本 xlim ±3 截窗
+        #expect(mom.series[0].points.allSatisfy { abs($0.x) <= 3.0 })
         #expect(result.summary.count == 4)
         #expect(result.theory?.formulas.count == 4)
     }

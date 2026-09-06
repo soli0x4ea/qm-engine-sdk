@@ -207,7 +207,10 @@ struct HydrogenRadialModule: SimModule {
                 let nodes = HydrogenRadialMath.countNodes(u)
                 nodeReport.append("n=\(n),l=\(sol.l):\(nodes)")
                 let density = HydrogenRadialMath.radialDensity(u: u, r: sol.r)
-                let pts = Num.strided(sol.r.map { $0 / a0 }, density, stride: 6)  // 2999 → 500 点
+                // 显示窗裁剪到脚本 xlim(0, 25) a₀（W13g 真机反馈 #17：rmax=3nm 时
+                // x 画到 57 a₀，右半屏空白）。rmax < 1.32 nm 时数据自然截止。
+                let pts = Num.strided(sol.r.map { $0 / a0 }, density, stride: 6)
+                    .filter { $0.x <= 25.0 }  // 2999 → 500 点
                 densitySeries.append(.init(name: "n=\(n), l=\(sol.l)", points: pts))
             }
         }

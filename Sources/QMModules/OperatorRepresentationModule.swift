@@ -119,13 +119,15 @@ struct OperatorRepresentationModule: SimModule {
         var phi2Max = 0.0
         for v in phi2 where v > phi2Max { phi2Max = v }
 
-        // 位置图：全网格抽稀（stride 8 → 512 点）
+        // 位置图：显示窗裁剪到脚本 xlim ±12（W13g 真机反馈 #12：±20 全域把高斯压成
+        // 窄条），窗内 stride 8 抽稀（24 宽 / 0.078 间距 ≈ 307 点，分辨率充裕）。
         let positionPts = Num.strided(x, psi2.map { $0 / psi2Max }, stride: 8)
+            .filter { abs($0.x) <= 12.0 }
 
-        // 动量图：信号区 |p| ≤ 4 全分辨率（频段 ±321 绝大部分为 0，截窗显示）
+        // 动量图：显示窗裁剪到脚本 xlim ±3（原 |p| ≤ 4），σₓ=2 时信号宽 ~2.3 窗内完整。
         var momentumPts: [Point] = []
-        momentumPts.reserveCapacity(64)
-        for i in 0..<p.count where abs(p[i]) <= 4.0 {
+        momentumPts.reserveCapacity(48)
+        for i in 0..<p.count where abs(p[i]) <= 3.0 {
             momentumPts.append(Point(x: p[i], y: phi2[i] / phi2Max))
         }
 

@@ -35,11 +35,12 @@ enum SternGerlachMath {
         return exp(-t * t)
     }
 
-    /// 探测屏网格（W13 修正 B1）：固定物理范围 z = linspace(−5 mm, +5 mm, 600)——
-    /// 原实现 linspace(−3dz, 3dz) 使 x 轴随偏移同步缩放，高斯形状在 (z/dz) 空间
-    /// 恒为普适函数，T/gradB/L/D 扰动视觉 0%。固定域后两束分离（毫米数）真实可见。
-    static func detectorGrid() -> [Double] {
-        Num.linspace(-5e-3, 5e-3, count: 600)
+    /// 探测屏网格：z = linspace(−3dz, +3dz, 600)（脚本口径）。
+    /// W13g 真机反馈 #16 回滚 W13 B1 的固定 ±5mm 域——默认参数 dz ≈ 35.3 mm，
+    /// 两束峰在 ±35 mm 完全出画，屏上只剩两条近零平线。自适应域两束恒可见；
+    /// 参数敏感性由摘要（dz/2dz 数值）与 ±dz 参考线标签承载。
+    static func detectorGrid(dz: Double) -> [Double] {
+        Num.linspace(-3 * dz, 3 * dz, count: 600)
     }
 }
 
@@ -95,8 +96,8 @@ struct SternGerlachModule: SimModule {
         let (a, d1, d2, dz) = SternGerlachMath.deflection(
             v: v, muB: muB, gradB: gradB, mass: mAg, magnetLength: Lm, drift: D)
 
-        // 探测屏曲线（固定物理域 600 网格；显示抽稀 stride 3 → 200 点）
-        let grid = SternGerlachMath.detectorGrid()
+        // 探测屏曲线（±3dz 自适应域 600 网格；显示抽稀 stride 3 → 200 点）
+        let grid = SternGerlachMath.detectorGrid(dz: dz)
         var upPts = [Point](), dnPts = [Point](), totPts = [Point]()
         upPts.reserveCapacity(200); dnPts.reserveCapacity(200); totPts.reserveCapacity(200)
         for i in grid.indices where i % 3 == 0 {

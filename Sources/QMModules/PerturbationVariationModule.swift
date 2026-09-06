@@ -109,6 +109,13 @@ struct PerturbationVariationModule: SimModule {
                 xAxis: .init(label: "微扰强度 λ"),
                 yAxis: .init(label: "相对误差 |num − (0+1+2)| / num", scale: .log),
                 seriesNames: ["相对误差扫描", "当前 λ"])),
+            // W13g 真机反馈 #19：λ 滑杆原只在误差曲线上挪一个点，氦图与 λ 无关——
+            // 补一张随 λ 联动的能量图，拖动即见微扰级数逐阶逼近精确对角化。
+            .lineSeries(LineSeriesSpec(
+                title: "非谐振子基态能量：微扰级数 vs 精确对角化（随 λ 联动）",
+                xAxis: .init(label: "微扰强度 λ"),
+                yAxis: .init(label: "基态能量 E（ħ = ω = m = 1）"),
+                seriesNames: ["仅到一阶 E⁰+E¹", "二阶微扰 E⁰+E¹+E²", "精确对角化"])),
             .lineSeries(LineSeriesSpec(
                 title: "氦原子变分：E(α) = α² − (27/8)α（单参乘积试探波函数）",
                 xAxis: .init(label: "有效核电荷 α"),
@@ -126,7 +133,8 @@ struct PerturbationVariationModule: SimModule {
         let payload = try await SecondsChannel.run(progress: progress)
             { () -> (errs: [Point], cur: Point?, pertGround: Double, exactGround: Double,
                      rampExact: Double, rampFirst: Double, rampNumeric: Double,
-                     heScan: [Point], heMinAlpha: Double, heMinE: Double) in
+                     heScan: [Point], heMinAlpha: Double, heMinE: Double,
+                     e1Scan: [Point], pertScan: [Point], exactScan: [Point]) in
             progress.update(0.1, phase: "构造 \(nB)² 谐振子基底 X⁴")
             let (e0, x4) = PerturbationVariationMath.anharmonicBasis(N: nB)
             try Task.checkCancellation()
@@ -134,12 +142,16 @@ struct PerturbationVariationModule: SimModule {
             progress.update(0.35, phase: "λ 扫描：每点一次 \(nB)² eigh")
             // λ ∈ [0.01, 0.20]，30 点（脚本口径）：二阶微扰 vs 精确基态相对误差
             var errs: [Point] = []
+            var e1Scan: [Point] = [], pertScan: [Point] = [], exactScan: [Point] = []
             for i in 0..<30 {
                 let l = 0.01 + 0.19 * Double(i) / 29.0
                 let e2 = PerturbationVariationMath.secondOrder(state: 0, e0: e0, x4: x4, lam: l, N: nB)
                 let num = PerturbationVariationMath.groundEnergy(lam: l, e0: e0, x4: x4, n: nB)
                 let pert = 0.5 + l * x4[0] + e2
                 errs.append(Point(x: l, y: abs((num - pert) / num)))
+                e1Scan.append(Point(x: l, y: 0.5 + l * x4[0]))
+                pertScan.append(Point(x: l, y: pert))
+                exactScan.append(Point(x: l, y: num))
             }
             try Task.checkCancellation()
             // 当前滑杆 λ 单独求值（滑杆值不必落在扫描网格上）
@@ -176,7 +188,7 @@ struct PerturbationVariationModule: SimModule {
                 if e < minE { minE = e; minAlpha = alpha }
             }
             return (errs, curPoint, pertAtCur, exactAtCur, rampE0, rampFirst, rampNumeric,
-                    heScan, minAlpha, minE)
+                    heScan, minAlpha, minE, e1Scan, pertScan, exactScan)
         }
 
         let alphaOpt = PerturbationVariationMath.heliumAlphaOpt
@@ -189,9 +201,20 @@ struct PerturbationVariationModule: SimModule {
         }()
         let chart0 = LineSeriesData(
             spec: charts[0].lineSeriesSpec!,
-            series: chart0Series)
-        let chart1 = LineSeriesData(
+            series: chart0Series,
+            referenceLines: [ReferenceLine(label: String(format: "当前 λ = %.3f", lam),
+                                           axis: .x, value: lam, style: .subtle)])
+        let chartE = LineSeriesData(
             spec: charts[1].lineSeriesSpec!,
+            series: [
+                .init(name: "仅到一阶 E⁰+E¹", points: payload.e1Scan, colorIndex: 3),
+                .init(name: "二阶微扰 E⁰+E¹+E²", points: payload.pertScan, colorIndex: 1),
+                .init(name: "精确对角化", points: payload.exactScan, colorIndex: 0),
+            ],
+            referenceLines: [ReferenceLine(label: String(format: "当前 λ = %.3f", lam),
+                                           axis: .x, value: lam, style: .subtle)])
+        let chart1 = LineSeriesData(
+            spec: charts[2].lineSeriesSpec!,
             series: [.init(name: "E(α) 扫描", points: payload.heScan)],
             referenceLines: [
                 ReferenceLine(label: String(format: "α* = 27/16 = %.4f", alphaOpt),
@@ -204,7 +227,7 @@ struct PerturbationVariationModule: SimModule {
 
         let upperBound = payload.heMinE > eExact
         return SimResult(
-            charts: [.lineSeries(chart0), .lineSeries(chart1)],
+            charts: [.lineSeries(chart0), .lineSeries(chartE), .lineSeries(chart1)],
             summary: [
                 .init(id: "pert", title: String(format: "非谐振子基态（λ=%.2f）", lam),
                       value: String(format: "微扰(0+1+2) %.6f", payload.pertGround),

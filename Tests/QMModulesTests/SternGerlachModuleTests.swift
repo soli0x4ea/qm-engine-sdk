@@ -101,6 +101,11 @@ struct SternGerlachModuleTests {
         #expect(c.series[0].points.count == 200)   // 600 / 3
         #expect(c.series[1].points.count == 200)
         #expect(c.series[2].points.count == 200)
+        // W13g #16：±3dz 自适应域——默认 dz≈35.3mm 时两束（±dz）必须在画面内
+        let dzMm = 35.265
+        #expect(c.series[0].points.allSatisfy { abs($0.x) <= 3 * dzMm + 1e-6 })
+        #expect(c.series[0].points.contains { $0.y > 0.9 }, "上束峰应在显示窗内")
+        #expect(c.series[1].points.contains { $0.y > 0.9 }, "下束峰应在显示窗内")
         #expect(result.summary.count == 4)
         #expect(result.theory?.formulas.count == 4)
     }

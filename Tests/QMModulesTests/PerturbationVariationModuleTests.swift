@@ -122,25 +122,49 @@ struct PerturbationVariationModuleTests {
 
     // MARK: compute 结构与预算
 
-    @Test("compute 输出结构：2 图（误差扫描 + 当前点；氦扫描 + 3 参考线）+ 摘要 5 条")
+    @Test("compute 输出结构：3 图（误差扫描+λ线；能量级数+λ线，W13g；氦扫描+3 参考线）+ 摘要 5 条")
     func computeStructure() async throws {
         let module = PerturbationVariationModule()
         let result = try await module.compute(
             ParamValues.defaults(for: module.params), constants: try constants())
-        #expect(result.charts.count == 2)
+        #expect(result.charts.count == 3)
         guard case .lineSeries(let c0) = result.charts[0],
-              case .lineSeries(let c1) = result.charts[1] else {
-            Issue.record("应为 2 lineSeries"); return
+              case .lineSeries(let cE) = result.charts[1],
+              case .lineSeries(let c1) = result.charts[2] else {
+            Issue.record("应为 3 lineSeries"); return
         }
         #expect(c0.series.count == 2, "误差扫描 + 当前 λ 点")
         #expect(c0.series[0].points.count == 30)
         #expect(c0.series[1].points.count == 1)
         #expect(abs(c0.series[1].points[0].x - 0.1) < 1e-12, "默认 λ = 0.1")
+        #expect(c0.referenceLines.count == 1 && c0.referenceLines[0].axis == .x)
+        // W13g #19：能量级数图（随 λ 联动）
+        #expect(cE.series.count == 3)
+        #expect(cE.series.allSatisfy { $0.points.count == 30 })
+        #expect(cE.series[0].name.contains("一阶") && cE.series[2].name.contains("精确"))
+        #expect(cE.referenceLines.count == 1 && cE.referenceLines[0].axis == .x)
         #expect(c1.series[0].points.count == 400)
         #expect(c1.referenceLines.count == 3)
         #expect(result.summary.count == 5)
         #expect(result.summary[3].value.contains("满足"), "上界定理成立")
         #expect(result.theory?.formulas.count == 4)
+    }
+
+    @Test("W13g 物理律：能量级数排序——E⁰¹² < E_exact < E¹ 全扫描域成立（E²<0，一阶高估）")
+    func energySeriesOrdering() async throws {
+        let module = PerturbationVariationModule()
+        let result = try await module.compute(
+            ParamValues.defaults(for: module.params), constants: try constants())
+        guard case .lineSeries(let cE) = result.charts[1] else {
+            Issue.record("图 2 应为 lineSeries"); return
+        }
+        let e1 = cE.series[0].points, p2 = cE.series[1].points, ex = cE.series[2].points
+        for i in e1.indices {
+            // E² = λ²Σ|X⁴₀ₘ|²/(E⁰₀−E⁰ₘ) < 0 ⇒ 二阶截断低估；一阶 0.5+λ⟨X⁴⟩₀ 高估
+            // （基态为压低 ⟨X⁴⟩ 而展宽）；精确值居中。锚点 λ=0.1：0.5488 < 0.5591 < 0.5750。
+            #expect(p2[i].y < ex[i].y && ex[i].y < e1[i].y,
+                    "λ=\(e1[i].x)：E⁰¹² \(p2[i].y) / exact \(ex[i].y) / E¹ \(e1[i].y)")
+        }
     }
 
     @Test("秒级档预算：compute < 2000 ms（31 次 40² eigh + 扫描，强制口径）")

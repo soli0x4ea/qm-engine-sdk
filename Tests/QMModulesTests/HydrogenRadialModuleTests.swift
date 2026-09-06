@@ -158,6 +158,9 @@ struct HydrogenRadialModuleTests {
         }
         #expect(c0.series.count == 9)
         #expect(c0.series.allSatisfy { $0.points.count <= 512 })
+        // W13g #17：显示窗裁剪到脚本 xlim(0, 25) a₀
+        #expect(c0.series.allSatisfy { $0.points.allSatisfy { $0.x <= 25.0 } })
+        #expect(c0.series.allSatisfy { $0.points.count >= 150 }, "窗内采样过稀？")
         #expect(c1.series.count == 2 && c1.series[0].points.count == 5)
         #expect(result.summary.count == 5)
         #expect(result.summary[4].value.contains("n=1,l=0:0"))
