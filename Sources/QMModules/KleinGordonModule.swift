@@ -73,6 +73,11 @@ struct KleinGordonDispersionModule: SimModule {
         let ePos = pc.map { KGMath.energyPositive($0, m0: m0) }
         let eNeg = pc.map { KGMath.energyNegative($0, m0: m0) }
         let eNR = pc.map { KGMath.energyNR($0, m0: m0) }
+        // W13h #37：NR 抛物线在 p_max 处可达 E₊ 顶部的数倍，自动域被拉高后两支
+        // KG 曲线被压进下三分之一。对齐脚本 ylim(±2.2) 的视觉效果——NR 点在
+        // 出画处截断（超出 E₊ 顶部 2% 即弃）。
+        let eTop = (ePos.max() ?? 1) * 1.02
+        let nrPts = Num.strided(pc, eNR, stride: 4).filter { $0.y <= eTop }
 
         // 关键数值（脚本 (1)-(4)）
         let pcHi = 10.0
@@ -89,7 +94,7 @@ struct KleinGordonDispersionModule: SimModule {
                         .init(name: "E₋ = −√((pc)² + (mc²)²)",
                               points: Num.strided(pc, eNeg, stride: 4), colorIndex: 1),
                         .init(name: "非相对论 mc² + p²/2m",
-                              points: Num.strided(pc, eNR, stride: 4), colorIndex: 2),
+                              points: nrPts, colorIndex: 2),
                     ],
                     referenceLines: [
                         .init(label: "+mc² = \(String(format: "%.4f", m0)) MeV",

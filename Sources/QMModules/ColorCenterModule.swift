@@ -110,19 +110,27 @@ struct FCenterHydrogenModule: SimModule {
                 note: "ε∞=\(h.epsInf), E_F(exp)=\(h.fBandExpEV) eV"))
         }
 
-        // 选定卤化物的能级图
+        // 选定卤化物的能级图（W13h #44：加「实验 F 带」第三能级——
+        // 原两能级图对 dE 自适应缩放，切卤化物画面恒不变；模型 vs 实验的
+        // 相对偏差随盐切换可见，才是这页的物理）
         let selID = input.discrete("salt")
         let sel = db.halide(id: selID) ?? db.fCenterHalides[3]
         let rStar = ColorCenterMath.rydbergStarEV(epsInf: sel.epsInf, rH_eV: rH)
         let aStar = ColorCenterMath.effectiveBohr(epsInf: sel.epsInf, a0: a0)
         let dE = ColorCenterMath.transitionEnergyEV(epsInf: sel.epsInf, rH_eV: rH)
         let lam = ColorCenterMath.modelWavelengthNm(epsInf: sel.epsInf, rH_eV: rH)
+        let dEexp = sel.fBandExpEV
+        let lamExp = ColorCenterMath.expWavelengthNm(eF_eV: dEexp)
         let levels: [Level] = [
             .init(id: "2p", label: "2p (T1u)", energy: 0.0),
-            .init(id: "1s", label: "1s (A1g)", energy: -dE),
+            .init(id: "1s", label: "1s 模型 (A1g)", energy: -dE),
+            .init(id: "1sExp", label: "实验 F 带", energy: -dEexp),
         ]
         let transitions: [Transition] = [
-            .init(fromIndex: 0, toIndex: 1, label: "ΔE = \(String(format: "%.2f", dE)) eV (λ≈\(Int(lam)) nm)"),
+            .init(fromIndex: 0, toIndex: 1,
+                  label: "模型 ΔE = \(String(format: "%.2f", dE)) eV (λ≈\(Int(lam)) nm)"),
+            .init(fromIndex: 0, toIndex: 2,
+                  label: "实验 E_F = \(String(format: "%.2f", dEexp)) eV (λ≈\(Int(lamExp)) nm)"),
         ]
 
         return SimResult(
@@ -176,6 +184,15 @@ struct ElectronPhononAbsorptionModule: SimModule {
             .slider(SliderSpec(key: "EZPL", title: "零声子线能量", symbol: "E_ZPL", unit: "eV",
                               range: 1.0...3.0, defaultValue: 1.945,
                               scale: .linear, decimalPlaces: 3)),
+            // W13h #44：X 轴可选波长域——NV 色心（钻石）谱在能量域一半落在红外，
+            // 波长域下可见光区（380–780 nm）一目了然
+            .discrete(DiscreteSpec(
+                key: "xmode", title: "X 轴模式",
+                options: [
+                    .init(id: "ev", title: "能量域 E (eV)", subtitle: "脚本口径，ZPL ± 10ħω 全窗"),
+                    .init(id: "nm", title: "波长域 λ (nm)", subtitle: "可见光区 380–780 nm 显示"),
+                ],
+                defaultOptionID: "ev")),
         ]
     }
 
@@ -193,6 +210,7 @@ struct ElectronPhononAbsorptionModule: SimModule {
         let S = input.slider("S")
         let hw = input.slider("hw")
         let eZPL = input.slider("EZPL")
+        let xmode = input.discrete("xmode")
         let gamma: Double = 0.012
 
         let nSide = 9
@@ -202,6 +220,26 @@ struct ElectronPhononAbsorptionModule: SimModule {
         let absSpec = ColorCenterMath.buildSpectrum(E, E_ZPL: eZPL, S: S, hw: hw, gamma: gamma, sign: +1)
         let emiSpec = ColorCenterMath.buildSpectrum(E, E_ZPL: eZPL, S: S, hw: hw, gamma: gamma, sign: -1)
 
+        // W13h #44：波长域模式——x 换算 λ = hc/E 并裁剪到可见光窗（380–780 nm）
+        let xAxisLabel: String
+        var absPts = Num.strided(E, absSpec, stride: 1)
+        var emiPts = Num.strided(E, emiSpec, stride: 1)
+        var zplRef = eZPL
+        if xmode == "nm" {
+            func toNm(_ pts: [Point]) -> [Point] {
+                pts.compactMap { p in
+                    p.x > 0 ? Point(x: ColorCenterMath.hcEVnm / p.x, y: p.y) : nil
+                }
+                .filter { (380.0...780.0).contains($0.x) }
+            }
+            absPts = toNm(absPts)
+            emiPts = toNm(emiPts)
+            zplRef = ColorCenterMath.hcEVnm / eZPL
+            xAxisLabel = "波长 λ (nm)（可见光区 380–780）"
+        } else {
+            xAxisLabel = "光子能量 E (eV)"
+        }
+
         let wTL0 = exp(-S)                 // 零温 Debye-Waller 因子 = P_0
         let zMask = E.indices.filter { abs(E[$0] - eZPL) < gamma * 2.5 }
         let areaTotal = Num.trapezoid(E, absSpec)
@@ -210,16 +248,18 @@ struct ElectronPhononAbsorptionModule: SimModule {
         return SimResult(
             charts: [
                 .lineSeries(LineSeriesData(
-                    spec: charts[0].lineSeriesSpec!,
+                    spec: .init(xAxis: .init(label: xAxisLabel),
+                                yAxis: .init(label: "吸收/发射线型 (a.u.，log)", scale: .log),
+                                seriesNames: ["Absorption (T=0)", "Emission (T=0)"]),
                     series: [
-                        .init(name: "Absorption (T=0)",
-                              points: Num.strided(E, absSpec, stride: 1)),
-                        .init(name: "Emission (T=0)",
-                              points: Num.strided(E, emiSpec, stride: 1), colorIndex: 1),
+                        .init(name: "Absorption (T=0)", points: absPts),
+                        .init(name: "Emission (T=0)", points: emiPts, colorIndex: 1),
                     ],
                     referenceLines: [
-                        ReferenceLine(label: "ZPL = \(String(format: "%.3f", eZPL)) eV",
-                                     axis: .x, value: eZPL, style: .threshold),
+                        ReferenceLine(label: xmode == "nm"
+                            ? "ZPL = \(String(format: "%.0f", zplRef)) nm"
+                            : "ZPL = \(String(format: "%.3f", zplRef)) eV",
+                                     axis: .x, value: zplRef, style: .threshold),
                     ])),
             ],
             summary: [

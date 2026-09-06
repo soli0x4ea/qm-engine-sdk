@@ -178,7 +178,7 @@ struct QuantumGravityModuleTests {
 
     // MARK: - compute 结构与计时
 
-    @Test("compute 结构：霍金温度 1 图 400 点 + 4 参考线 + 4 摘要 + 理论卡")
+    @Test("compute 结构：霍金温度 1 图 400 点 + 5 参考线 + 1 标记 + 5 摘要 + 理论卡")
     func hawkingStructureAndTiming() async throws {
         let module = HawkingTemperatureModule()
         let values = ParamValues.defaults(for: module.params)
@@ -187,15 +187,17 @@ struct QuantumGravityModuleTests {
         let chart = try #require(chartLineSeries(result, 0))
         #expect(chart.series.count == 1)
         #expect(chart.series[0].points.count == 400)
-        #expect(chart.referenceLines.count == 4, "m_P / 1 M☉ / 10 M☉ / M87* 四条参考线")
-        #expect(result.summary.count == 4)
+        #expect(chart.referenceLines.count == 5, "m_P / 1 M☉ / 10 M☉ / M87* / M_max")
+        #expect(chart.pointMarkers.count == 1, "W13h：M_max 端点标记")
+        #expect(abs(chart.pointMarkers[0].x - values.sliders["Mmax"]! * 1.98847e30) < 1e-6)
+        #expect(result.summary.count == 5)
         #expect(result.theory?.formulas.count == 3)
         try await expectComputeUnderBudget(module: module, values: values,
                                            constants: try constants(),
                                            budgetMillis: 16)
     }
 
-    @Test("compute 结构：黑洞熵 1 图双系列各 400 点 + 2 参考线 + 4 摘要 + 理论卡")
+    @Test("compute 结构：黑洞熵 1 图双系列各 400 点 + 3 参考线 + 1 标记 + 5 摘要 + 理论卡")
     func entropyStructureAndTiming() async throws {
         let module = BlackHoleEntropyModule()
         let values = ParamValues.defaults(for: module.params)
@@ -204,8 +206,9 @@ struct QuantumGravityModuleTests {
         let chart = try #require(chartLineSeries(result, 0))
         #expect(chart.series.count == 2)
         for s in chart.series { #expect(s.points.count == 400) }
-        #expect(chart.referenceLines.count == 2)
-        #expect(result.summary.count == 4)
+        #expect(chart.referenceLines.count == 3, "1 M☉ / M87* / M_max（W13h +1）")
+        #expect(chart.pointMarkers.count == 1, "W13h：M_max 端点标记")
+        #expect(result.summary.count == 5)
         #expect(result.theory?.formulas.count == 3)
         try await expectComputeUnderBudget(module: module, values: values,
                                            constants: try constants(),

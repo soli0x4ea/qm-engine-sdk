@@ -161,6 +161,11 @@ struct EPRBellModule: SimModule {
             .slider(SliderSpec(key: "N", title: "随机采样数", symbol: "N", unit: "次",
                                range: 20000...200000, defaultValue: 200000,
                                decimalPlaces: 0)),
+            // W13h #30：N 滑杆只影响统计收敛（视觉不可见），补一个直接进入图形的
+            // Werner 退极化强度滑杆——拖 p 沿 |S|(p) 直线滑动、跨 1/√2 违反阈。
+            .slider(SliderSpec(key: "wernerP", title: "Werner 态权重", symbol: "p", unit: "",
+                               range: 0...1, defaultValue: 0.9,
+                               scale: .linear, decimalPlaces: 2)),
         ]
     }
 
@@ -186,11 +191,18 @@ struct EPRBellModule: SimModule {
                 xAxis: .init(label: "样本序号"),
                 yAxis: .init(label: "CHSH 值 S"),
                 seriesNames: ["随机方向采样 S"])),
+            // W13h #30：Werner 信道随 p 联动
+            .lineSeries(LineSeriesSpec(
+                title: "Werner 信道：|S|(p) = p·2√2（CHSH 违反阈 p > 1/√2）",
+                xAxis: .init(label: "Werner 态权重 p"),
+                yAxis: .init(label: "CHSH 组合量 |S|"),
+                seriesNames: ["|S|(p) = p·2√2"])),
         ]
     }
 
     func compute(_ input: ParamValues, constants: ConstantsSet) async throws -> SimResult {
         let n = Int(input.slider("N"))
+        let pWerner = input.slider("wernerP")
 
         // --- [2] 自旋单态扫描：φ ∈ [0, π/2]，1000 点网格（脚本口径） ---
         let phiGrid = Num.linspace(0, .pi / 2, count: Self.singletGridN)
@@ -221,7 +233,9 @@ struct EPRBellModule: SimModule {
             EPRBellMath.E_phipol(45 * d2r, 67.5 * d2r))
 
         // --- [4] Tsirelson 界随机采样（SplitMix64 定种子 42；W13 附带均匀抽样序列） ---
-        let sample = EPRBellMath.tsirelsonSampling(n: n, keepSamples: 600)
+        // W13h #30：显示点数随 N 缩放（N/333，60→600）——拖 N 散点密度可见变化
+        let sample = EPRBellMath.tsirelsonSampling(
+            n: n, keepSamples: max(60, min(600, n / 333)))
 
         // --- [4b] Bell 1964 原始不等式违反样例 ---
         let b1964 = EPRBellMath.bell1964()
@@ -276,7 +290,8 @@ struct EPRBellModule: SimModule {
                 ReferenceLine(label: "Tsirelson 界 2√2", axis: .x, value: EPRBellMath.tsirelson),
             ])
 
-        // 图 4（W13/B2）：采样分布散点——N 滑杆的可见反馈（覆盖范围随 N 变化）
+        // 图 4（W13/B2）：采样分布散点——W13h #30：点数随 N 缩放（密度可见），
+        // 极值 max/min 以横参考线标注（N 越大越逼近 ±2√2）
         let chart4 = ScatterData(
             spec: .init(xAxis: .init(label: "样本序号"),
                         yAxis: .init(label: "CHSH 值 S"),
@@ -287,13 +302,36 @@ struct EPRBellModule: SimModule {
                            })],
             referenceLines: [
                 ReferenceLine(label: "LHV 界 ±2", axis: .y, value: 2),
-                ReferenceLine(label: "−2", axis: .y, value: -2, style: .subtle),
+                ReferenceLine(label: String(format: "max S = %.4f", sample.maxS),
+                              axis: .y, value: sample.maxS, style: .subtle),
+                ReferenceLine(label: String(format: "min S = %.4f", sample.minS),
+                              axis: .y, value: sample.minS, style: .subtle),
+            ])
+
+        // 图 5（W13h #30）：Werner 信道 |S|(p)——当前 p 大圆点沿线滑动，
+        // 跨 p = 1/√2 违反阈即进可 violating 区
+        let pGrid = Num.linspace(0, 1, count: 200)
+        let chart5 = LineSeriesData(
+            spec: .init(xAxis: .init(label: "Werner 态权重 p"),
+                        yAxis: .init(label: "CHSH 组合量 |S|"),
+                        seriesNames: ["|S|(p) = p·2√2"]),
+            series: [.init(name: "|S|(p) = p·2√2",
+                           points: pGrid.map { Point(x: $0, y: $0 * EPRBellMath.tsirelson) })],
+            referenceLines: [
+                ReferenceLine(label: "LHV 界 |S| = 2", axis: .y, value: 2),
+                ReferenceLine(label: "违反阈 p = 1/√2", axis: .x, value: 1 / sqrt(2), style: .subtle),
+            ],
+            pointMarkers: [
+                PointMarker(x: pWerner, y: pWerner * EPRBellMath.tsirelson,
+                            label: String(format: "p = %.2f → |S| = %.4f",
+                                          pWerner, pWerner * EPRBellMath.tsirelson),
+                            colorIndex: 1),
             ])
 
         let lhvMax = EPRBellMath.lhvMaxS()
         return SimResult(
             charts: [.lineSeries(chart1), .lineSeries(chart2),
-                     .scatter(chart3), .scatter(chart4)],
+                     .scatter(chart3), .scatter(chart4), .lineSeries(chart5)],
             summary: [
                 .init(id: "lhv", title: "LHV 枚举界",
                       value: String(format: "max|S| = %.4f", lhvMax),
@@ -315,6 +353,12 @@ struct EPRBellModule: SimModule {
                 .init(id: "werner", title: "Werner 阈值",
                       value: String(format: "p* = %.4f", werner.pThr),
                       note: String(format: "解析值 1/√2 = %.6f", 1 / sqrt(2))),
+                .init(id: "wernerCur", title: "Werner 当前 |S|(p)",
+                      value: String(format: "p = %.2f → %.4f", pWerner,
+                                    pWerner * EPRBellMath.tsirelson),
+                      note: pWerner > 1 / sqrt(2)
+                          ? "p > 1/√2：CHSH 违反区"
+                          : "p ≤ 1/√2：不违反（图 5 大圆点在阈左侧）"),
                 .init(id: "experiments", title: "实验选列",
                       value: "2.697 / 2.25 / 2.42",
                       note: "Aspect 1982 ±0.015 · Rowe 2001 ±0.03 · Hensen 2015 ±0.20"),

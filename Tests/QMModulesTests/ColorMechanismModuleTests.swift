@@ -128,7 +128,9 @@ struct ColorMechanismModuleTests {
             ParamValues.defaults(for: module.params), constants: try constants())
         let chart = try #require(chartLineSeries(result, 0))
         #expect(chart.series.count == 1)
-        #expect(chart.series[0].points.count == 600)
+        // W13h #43：显示窗随 ξ₀ 收缩（默认 ξ₀=0.5 → x ≤ 2.0 → ~400 点）
+        #expect(chart.series[0].points.count >= 350 && chart.series[0].points.count <= 450,
+                "窗内点数 \(chart.series[0].points.count)")
         // ξ → 0 段 I ∝ ξ²，512 点 fixture 的线性插值在二次起始段相对误差被放大到 10%，
         // 故跳过 ξ < 0.1（I < 4%）；其余区间实测插值误差 ≤ 1.3×10⁻³，取容差 5×10⁻³。
         expectResampled(moduleX: chart.series[0].points.map(\.x),
@@ -172,7 +174,7 @@ struct ColorMechanismModuleTests {
 
     // MARK: - compute 结构与计时
 
-    @Test("compute 结构：振动耦合 1 图 600 点 + 双参考线 + 4 摘要")
+    @Test("compute 结构：振动耦合 1 图（显示窗随 ξ₀ 收缩，W13h）+ 双参考线 + 4 摘要")
     func vibronicStructureAndTiming() async throws {
         let module = ColorVibrationalCouplingModule()
         let values = ParamValues.defaults(for: module.params)
@@ -180,8 +182,13 @@ struct ColorMechanismModuleTests {
         #expect(result.charts.count == 1)
         let chart = try #require(chartLineSeries(result, 0))
         #expect(chart.series.count == 1)
-        #expect(chart.series[0].points.count == 600)
+        // W13h #43：ξ₀=0.5 → 显示窗 x ≤ min(3, max(0.6, 4ξ₀)) = 2.0 → 600·(2/3) ≈ 400 点
+        let pts = chart.series[0].points
+        #expect(pts.count >= 350 && pts.count <= 450, "窗内点数 \(pts.count)")
+        #expect(pts.allSatisfy { $0.x <= 2.0 + 1e-9 }, "默认窗 x ≤ 2.0")
+        // ξ₀ 竖线 + 端点标记在窗内可见
         #expect(chart.referenceLines.count == 2)
+        #expect(chart.pointMarkers.count == 1)
         #expect(result.summary.count == 4)
         #expect(result.theory?.formulas.count == 3)
         try await expectComputeUnderBudget(module: module, values: values,
@@ -189,7 +196,7 @@ struct ColorMechanismModuleTests {
                                            budgetMillis: 16)
     }
 
-    @Test("compute 结构：致色模型 2 图（400 点曲线 + 3 散点）+ 可见光双参考线 + 6 摘要")
+    @Test("compute 结构：致色模型 2 图（400 点曲线 + 3 散点）+ 可见光双参考线 + 10Dq 线 + 6 摘要")
     func colorModelStructureAndTiming() async throws {
         let module = ColorMechanismModelModule()
         let values = ParamValues.defaults(for: module.params)
@@ -197,7 +204,9 @@ struct ColorMechanismModuleTests {
         #expect(result.charts.count == 2)
         let curve = try #require(chartLineSeries(result, 0))
         #expect(curve.series[0].points.count == 400)
-        #expect(curve.referenceLines.count == 2, "可见光下界/上界两条参考线")
+        #expect(curve.referenceLines.count == 3, "可见光上下界 + 10Dq（W13h）")
+        #expect(curve.pointMarkers.count == 1, "W13h：10Dq → λ 标记点")
+        #expect(abs(curve.pointMarkers[0].x - 10 * values.sliders["Dq"]!) < 1e-6)
         let scatter = try #require(chartScatter(result, 1))
         #expect(scatter.series.count == 3)
         #expect(result.summary.count == 6, "3 矿物 + 反比律 + 分裂 + 质心")

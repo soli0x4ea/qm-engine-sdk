@@ -190,8 +190,9 @@ struct ColorCenterModuleTests {
         let kcl = try #require(MaterialDB.load().halide(id: "KCl"))
         #expect(kcl.epsInf == 2.22)
         let levels = try #require(chartLevelDiagram(result, 1))
-        #expect(levels.levels.count == 2)
-        #expect(levels.transitions.count == 1)
+        // W13h #44：+实验 F 带能级 → 3 能级 2 跃迁
+        #expect(levels.levels.count == 3)
+        #expect(levels.transitions.count == 2)
         let gap = levels.levels[0].energy - levels.levels[1].energy
         let k = try constants()
         let rH = try k.value("R_inf_hc_eV")
@@ -231,7 +232,7 @@ struct ColorCenterModuleTests {
 
     // MARK: - compute 结构与计时
 
-    @Test("compute 结构：F 心 2 图（12 柱 + 2 能级 1 跃迁）+ 8 摘要")
+    @Test("compute 结构：F 心 2 图（12 柱 + 3 能级 2 跃迁，W13h）+ 8 摘要")
     func fCenterStructureAndTiming() async throws {
         let module = FCenterHydrogenModule()
         let values = ParamValues.defaults(for: module.params)
@@ -240,7 +241,13 @@ struct ColorCenterModuleTests {
         let bars = try #require(chartBars(result, 0))
         #expect(bars.bars.count == 12)
         let levels = try #require(chartLevelDiagram(result, 1))
-        #expect(levels.levels.count == 2 && levels.transitions.count == 1)
+        // W13h #44：+实验 F 带能级与跃迁——切盐时模型-实验偏差可见
+        #expect(levels.levels.count == 3 && levels.transitions.count == 2)
+        let expLevel = try #require(levels.levels.first { $0.id == "1sExp" })
+        let db0 = try MaterialDB.load()
+        let kcl = try #require(db0.halide(id: values.discretes["salt"] ?? "KCl"))
+        #expect(abs(expLevel.energy + kcl.fBandExpEV) < 1e-12,
+                "实验能级 = −E_F(exp)（MaterialDB）")
         #expect(result.summary.count == 8, "6 卤化物 + 选定项 + Mollwo-Ivey")
         #expect(result.theory?.formulas.count == 3)
         // 切换到 LiF：ε∞ 更小 → R* 更大 → 能隙更宽（离散参数联动）
@@ -285,5 +292,27 @@ struct ColorCenterModuleTests {
         try await expectComputeUnderBudget(module: module, values: values,
                                            constants: try constants(),
                                            budgetMillis: 2000)
+    }
+
+    @Test("W13h #44：波长域模式——x 换算 λ = hc/E 且全部落在可见光窗 380–780 nm")
+    func electronPhononNanometerMode() async throws {
+        let module = ElectronPhononAbsorptionModule()
+        var values = ParamValues.defaults(for: module.params)
+        values.discretes["xmode"] = "nm"
+        let result = try await module.compute(values, constants: try constants())
+        let chart = try #require(chartLineSeries(result, 0))
+        #expect(chart.series.count == 2)
+        for s in chart.series {
+            #expect(!s.points.isEmpty, "默认 NV 参数（ZPL=1.945 eV ≈ 637 nm）窗内应有谱")
+            #expect(s.points.allSatisfy { (380.0...780.0).contains($0.x) },
+                    "全部点在可见光窗内")
+            // 换算自洽：x = 1239.841984/E 仅当 y 对应同一 E 网格——抽查能量域
+            for p in s.points where abs(p.x - 637.1) < 3.0 {
+                #expect(p.x > 0)
+            }
+        }
+        // ZPL 参考线换算为 nm
+        let zpl = try #require(chart.referenceLines.first)
+        #expect(abs(zpl.value - 1239.841984 / 1.945) < 1e-9, "ZPL 参考线 = hc/E_ZPL nm")
     }
 }

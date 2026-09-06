@@ -234,8 +234,12 @@ struct RamanSpectrumModule: SimModule {
 
         let modes = db.ramanModes.map { (nuV: $0.nuVcm, fwhm: $0.fwhmCm) }
         let shiftMax = 3000.0
-        let xs = Num.linspace(nu0 - shiftMax, nu0 + shiftMax, count: 60001)
-        let spec = SpectroscopyMath.ramanSpectrum(xs, nu0: nu0, c_cm: c_cm,
+        // W13h #45：x 轴改「拉曼位移 Δν = ν散射 − ν₀」——绝对波数轴随 λ₀ 平移、
+        // 刻度值无物理含义；位移轴下 Rayleigh 恒在 0、Stokes/anti-Stokes 恒在 ∓ν_v。
+        // λ₀ 的影响保留在 ν⁴ 权重（anti/Stokes 强度比随 λ₀ 微变）。
+        let shifts = Num.linspace(-shiftMax, shiftMax, count: 60001)
+        let xsAbs = shifts.map { nu0 + $0 }
+        let spec = SpectroscopyMath.ramanSpectrum(xsAbs, nu0: nu0, c_cm: c_cm,
                                                  hbar: hbar, kB: kB, T: T, modes: modes)
 
         // 金刚石 1332 cm⁻¹ 模式的玻色占据与 Stokes/anti-Stokes 强度比
@@ -251,17 +255,19 @@ struct RamanSpectrumModule: SimModule {
         return SimResult(
             charts: [
                 .lineSeries(LineSeriesData(
-                    spec: charts[0].lineSeriesSpec!,
+                    spec: .init(xAxis: .init(label: "拉曼位移 Δν = ν散射 − ν₀ (cm⁻¹)"),
+                                yAxis: .init(label: "相对强度 (a.u.，log)", scale: .log),
+                                seriesNames: ["Raman (Stokes + anti-Stokes)"]),
                     series: [
                         .init(name: "Raman (Stokes + anti-Stokes)",
-                              points: Num.strided(xs, spec, stride: 1)),
+                              points: Num.strided(shifts, spec, stride: 1)),
                     ],
                     referenceLines: [
-                        ReferenceLine(label: "Rayleigh (λ₀, 弹性)", axis: .x, value: nu0, style: .subtle),
+                        ReferenceLine(label: "Rayleigh（弹性，Δν = 0）", axis: .x, value: 0, style: .subtle),
                         ReferenceLine(label: "金刚石 1332 cm⁻¹ Stokes", axis: .x,
-                                     value: nu0 - diamond.nuVcm, style: .threshold),
+                                     value: -diamond.nuVcm, style: .threshold),
                         ReferenceLine(label: "金刚石 1332 cm⁻¹ anti-Stokes", axis: .x,
-                                     value: nu0 + diamond.nuVcm, style: .threshold),
+                                     value: diamond.nuVcm, style: .threshold),
                     ])),
             ],
             summary: [

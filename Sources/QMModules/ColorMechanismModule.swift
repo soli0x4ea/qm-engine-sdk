@@ -60,9 +60,13 @@ struct ColorVibrationalCouplingModule: SimModule {
 
     func compute(_ input: ParamValues, constants: ConstantsSet) async throws -> SimResult {
         let xi0 = input.slider("xi0")
-        let xi = Num.linspace(1e-3, 3.0, count: 600)  // 网格保持 1e-3 起（fixture 对拍口径）；回线性后低 ξ 幂律段仍可见
+        let xi = Num.linspace(1e-3, 3.0, count: 600)  // 网格保持 1e-3 起（fixture 对拍口径）
         let I = xi.map { ColorMechanismMath.relativeIntensity(xi: $0, xi0: xi0) }
         let area = Num.trapezoid(xi, I)
+        // W13h #43：显示窗随 ξ₀ 收缩——x ≤ min(3, max(0.6, 4ξ₀))。原恒画 [0,3]：
+        // ξ₀ 小时右侧 2/3 是平坦饱和死区。裁剪后饱和膝点恒居画面中部，
+        // 拖 ξ₀ 时窗口与 ξ₀ 竖线联动。
+        let xWin = min(3.0, max(0.6, 4.0 * xi0))
 
         let refLines = [
             ReferenceLine(label: "I = 0.5（半强度，ξ = ξ₀）", axis: .y, value: 0.5, style: .subtle),
@@ -75,7 +79,8 @@ struct ColorVibrationalCouplingModule: SimModule {
                     spec: charts[0].lineSeriesSpec!,
                     series: [
                         .init(name: "I(ξ) = ξ²/(ξ²+ξ₀²)",
-                              points: Num.strided(xi, I, stride: 1)),
+                              points: Num.strided(xi, I, stride: 1)
+                                  .filter { $0.x <= xWin }),
                     ],
                     referenceLines: refLines,
                     // W13（B3）：ξ₀ 半强度交点大圆点（阈值线视觉强化）
@@ -149,6 +154,11 @@ struct ColorMechanismModelModule: SimModule {
 
     func compute(_ input: ParamValues, constants: ConstantsSet) async throws -> SimResult {
         let db = try MaterialDB.load()
+        // W13h #43：Dq 滑杆原只进摘要——补 λ(Δ) 曲线上的 10Dq 标记点 + 竖参考线，
+        // 拖 Dq 沿反比律曲线滑动（Δ_o = 10Dq 处的吸收波长即时可见）
+        let dq = input.slider("Dq")
+        let dqDelta = 10.0 * dq
+        let dqLambda = ColorMechanismMath.deltaToLambdaNm(deltaCm: dqDelta)
 
         let delta = Num.linspace(5000.0, 25000.0, count: 400)
         let lam = delta.map { ColorMechanismMath.deltaToLambdaNm(deltaCm: $0) }
@@ -157,6 +167,8 @@ struct ColorMechanismModelModule: SimModule {
         let refLines = [
             ReferenceLine(label: "可见光下界 λ=780 nm → Δ≈12820", axis: .x, value: 12820, style: .subtle),
             ReferenceLine(label: "可见光上界 λ=400 nm → Δ≈25000", axis: .x, value: 25000, style: .subtle),
+            ReferenceLine(label: String(format: "10Dq = %.0f cm⁻¹ (Dq = %.0f)", dqDelta, dq),
+                          axis: .x, value: dqDelta, style: .threshold),
         ]
 
         // 矿物散点（来自 MaterialDB）
@@ -176,7 +188,6 @@ struct ColorMechanismModelModule: SimModule {
         }
 
         // O_h 八面体 d 轨道分裂核验（Dq 滑块）
-        let dq = input.slider("Dq")
         let sp = ColorMechanismMath.octahedralSplitting(dqCm: dq)
 
         return SimResult(
@@ -187,7 +198,13 @@ struct ColorMechanismModelModule: SimModule {
                         .init(name: "λ = 10⁷ / Δ (nm)",
                               points: Num.strided(delta, lam, stride: 1)),
                     ],
-                    referenceLines: refLines)),
+                    referenceLines: refLines,
+                    pointMarkers: [
+                        PointMarker(x: min(dqDelta, 25000), y: dqLambda,
+                                    label: String(format: "10Dq = %.0f cm⁻¹ → λ = %.0f nm",
+                                                  dqDelta, dqLambda),
+                                    colorIndex: 1),
+                    ])),
                 .scatter(ScatterData(
                     spec: charts[1].scatterSpec!,
                     series: scatterSeries)),

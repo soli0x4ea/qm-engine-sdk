@@ -128,26 +128,29 @@ struct SpectroscopyModuleTests {
         #expect(chart.series[0].points.count == 60001)
         let xs = chart.series[0].points.map(\.x)
         let ys = chart.series[0].points.map(\.y)
+        // W13h #45：x 轴为拉曼位移 Δν = ν散射 − ν₀，域 [−3000, +3000]
         let firstX = try #require(xs.first)
         let lastX = try #require(xs.last)
-        let nu0 = (firstX + lastX) / 2.0
-        #expect(abs(nu0 - 1.0e7 / 785.0) < 1e-6, "ν₀ = \(nu0) cm⁻¹（785 nm 激发）")
+        #expect(abs(firstX + 3000.0) < 1e-6 && abs(lastX - 3000.0) < 1e-6,
+                "位移域 [−3000, +3000]，实测 [\(firstX), \(lastX)]")
+        let nu0 = 1.0e7 / 785.0   // 物理权重（ν⁴）仍用绝对波数
 
         // 局部极大 = 拉曼带（3 个模式 × Stokes/anti-Stokes = 6 条）
+        // 位移帧：Stokes 峰在 −ν_v（负侧），anti-Stokes 在 +ν_v（正侧）
         var peaks: [(x: Double, y: Double)] = []
         for i in 1..<(xs.count - 1) where ys[i] > ys[i - 1] && ys[i] >= ys[i + 1] {
             peaks.append((xs[i], ys[i]))
         }
         #expect(peaks.count == 6, "应分辨 6 条拉曼带，实测 \(peaks.count)")
-        let stokes = peaks.filter { $0.x < nu0 }.sorted { $0.x > $1.x }   // ν₀−ν_v，ν_v 升序
-        let anti = peaks.filter { $0.x > nu0 }.sorted { $0.x < $1.x }
+        let stokes = peaks.filter { $0.x < 0 }.sorted { $0.x > $1.x }   // −ν_v，绝对值升序
+        let anti = peaks.filter { $0.x > 0 }.sorted { $0.x < $1.x }
         #expect(stokes.count == 3 && anti.count == 3)
         for i in 0..<3 {
             let nuV = modes.sorted { $0.nuVcm < $1.nuVcm }[i].nuVcm
-            #expect(abs((nu0 - stokes[i].x) - nuV) < 0.2,
-                    "第 \(i) 条 Stokes 位移 \(nu0 - stokes[i].x) 应为 ν_v = \(nuV)")
-            #expect(abs((anti[i].x - nu0) - nuV) < 0.2,
-                    "第 \(i) 条 anti-Stokes 位移 \(anti[i].x - nu0) 应为 ν_v = \(nuV)")
+            #expect(abs((-stokes[i].x) - nuV) < 0.2,
+                    "第 \(i) 条 Stokes 位移 \(-stokes[i].x) 应为 ν_v = \(nuV)")
+            #expect(abs(anti[i].x - nuV) < 0.2,
+                    "第 \(i) 条 anti-Stokes 位移 \(anti[i].x) 应为 ν_v = \(nuV)")
             // 强度比：anti-Stokes/Stokes = (ν_AS/ν_S)⁴·n_v/(n_v+1)。
             // 弱 anti-Stokes 峰（尤其 ν_v=2900）坐在最强模式的洛伦兹拖尾上，直接取模块谱
             // 局部极大值会把拖尾算进去；这里减去「其它模式拖尾 + 本模 Stokes 拖尾」，
@@ -158,8 +161,8 @@ struct SpectroscopyModuleTests {
             let aSi = stokes[i].y                          // ≈ 本模 Stokes 纯振幅（污染 < 1e-5）
             let fwhm_i = try #require(modes.first { $0.nuVcm == nuV }).fwhmCm
             let h_i = fwhm_i / 2.0
-            // 本模 Stokes 拖尾（在 anti 峰位处）
-            var tail = aSi * (h_i * h_i) / ((anti[i].x - nuS) * (anti[i].x - nuS) + h_i * h_i)
+            // 本模 Stokes 拖尾（在 anti 峰位处；位移帧内本模 Stokes 位于 −nuV）
+            var tail = aSi * (h_i * h_i) / ((anti[i].x + nuV) * (anti[i].x + nuV) + h_i * h_i)
             // 其它模式在 anti 峰位处的 Stokes + anti-Stokes 拖尾
             for mj in modes where mj.nuVcm != nuV {
                 let oj = 2.0 * .pi * c_cm * mj.nuVcm
@@ -167,8 +170,9 @@ struct SpectroscopyModuleTests {
                 let nS = nu0 - mj.nuVcm, nAS = nu0 + mj.nuVcm
                 let aSj = pow(nS, 4) * (nvj + 1.0), aASj = pow(nAS, 4) * nvj
                 let hj = mj.fwhmCm / 2.0
-                tail += aSj * (hj * hj) / ((anti[i].x - nS) * (anti[i].x - nS) + hj * hj)
-                      + aASj * (hj * hj) / ((anti[i].x - nAS) * (anti[i].x - nAS) + hj * hj)
+                // 位移帧：该模 Stokes 位于 −mj.nuVcm、anti 位于 +mj.nuVcm
+                tail += aSj * (hj * hj) / ((anti[i].x + mj.nuVcm) * (anti[i].x + mj.nuVcm) + hj * hj)
+                      + aASj * (hj * hj) / ((anti[i].x - mj.nuVcm) * (anti[i].x - mj.nuVcm) + hj * hj)
             }
             let antiPure = max(anti[i].y - tail, 0.0)
             let expected = (pow(nuAS, 4) * nv) / (pow(nuS, 4) * (nv + 1.0))

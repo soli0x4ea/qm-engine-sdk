@@ -210,37 +210,37 @@ struct QubitRabiModule: SimModule {
     }
 
     var charts: [ChartSpec] {
-        [
+        // W13h #36：三平台共用 4ms 轴时 transmon（200μs 即衰减）让右半轴空置——
+        // 拆三图各用各的自然窗口，每条轴都填满；T₂ 尺度对比由图标题承载。
+        QubitRabiModule.platforms.map { p in
             .lineSeries(LineSeriesSpec(
-                title: "受驱量子比特 Rabi 振荡（含退相干包络）",
+                title: "\(p.name) 窗口",
                 xAxis: .init(label: "时间 t (μs)"),
                 yAxis: .init(label: "P_e(t) = e^(−t/T₂)·sin²(Ω_R t/2)"),
-                seriesNames: QubitRabiModule.platforms.map(\.name))),
-        ]
+                seriesNames: [p.name]))
+        }
     }
 
     func compute(_ input: ParamValues, constants: ConstantsSet) async throws -> SimResult {
         let fDrive = input.slider("fdrive") * 1e6     // Hz
         let omegaR = 2.0 * .pi * fDrive
 
-        var series: [SeriesPoints] = []
+        var out: [ChartData] = []
         for p in QubitRabiModule.platforms {
             let t = Num.linspace(0, p.tMax, count: 2000)
             let pe = t.map { CavityQEDMath.drivenQubitPe($0, omegaR: omegaR, t2: p.t2) }
-            series.append(.init(name: p.name,
-                                points: Num.strided(t.map { $0 * 1e6 }, pe, stride: 4),
-                                colorIndex: p.colorIndex))
+            out.append(.lineSeries(LineSeriesData(
+                spec: charts[p.colorIndex].lineSeriesSpec!,
+                series: [.init(name: p.name,
+                               points: Num.strided(t.map { $0 * 1e6 }, pe, stride: 2),
+                               colorIndex: p.colorIndex)],
+                referenceLines: [
+                    .init(label: "P_e = 1（无退相干上限）", axis: .y, value: 1, style: .subtle),
+                ])))
         }
 
         return SimResult(
-            charts: [
-                .lineSeries(LineSeriesData(
-                    spec: charts[0].lineSeriesSpec!,
-                    series: series,
-                    referenceLines: [
-                        .init(label: "P_e = 1（无退相干上限）", axis: .y, value: 1, style: .subtle),
-                    ])),
-            ],
+            charts: out,
             summary: [
                 .init(id: "osc", title: "相干时间内振荡次数",
                       value: String(format: "%.2e", CavityQEDMath.coherentOscillationCount(

@@ -174,17 +174,25 @@ struct CavityQEDModuleTests {
             constants: try constants(), budgetMillis: 16)
     }
 
-    @Test("compute 结构：量子比特 Rabi 三平台（各 500 点）+ 摘要 + 理论卡；实时档预算")
+    @Test("compute 结构：量子比特 Rabi 三图各平台自然窗口（W13h #36，各 1000 点）+ 摘要 + 理论卡")
     func qubitRabiComputeStructure() async throws {
         let module = QubitRabiModule()
         let result = try await module.compute(
             ParamValues.defaults(for: module.params), constants: try constants())
-        #expect(result.charts.count == 1)
-        guard case .lineSeries(let c) = result.charts[0] else {
-            Issue.record("应为 lineSeries"); return
+        #expect(result.charts.count == 3, "W13h：三平台拆三图，各用各的窗口")
+        let windowsUs: [Double] = [4000, 200, 4000]
+        for (i, p) in QubitRabiModule.platforms.enumerated() {
+            guard case .lineSeries(let c) = result.charts[i] else {
+                Issue.record("图 \(i) 应为 lineSeries"); return
+            }
+            #expect(c.series.count == 1)
+            #expect(c.series[0].points.count == 1000, "2000/2 抽稀")
+            // 各图 x 域 = 该平台自然窗口（stride 抽稀后末点 ≥ 99% 窗口）
+            let xs = c.series[0].points.map(\.x)
+            #expect(xs.last! >= windowsUs[i] * 0.99,
+                    "图 \(i) 末点 \(xs.last!) 应近窗口 \(windowsUs[i]) μs")
+            #expect(c.series[0].name == p.name)
         }
-        #expect(c.series.count == 3)
-        for s in c.series { #expect(s.points.count == 500, "2000/4 抽稀") }
         #expect(result.summary.count == 5)
         #expect(result.theory?.formulas.count == 4)
         try await expectComputeUnderBudget(

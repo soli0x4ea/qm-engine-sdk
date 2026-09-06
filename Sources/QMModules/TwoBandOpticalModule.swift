@@ -317,12 +317,22 @@ struct TwoBandOpticalModule: SimModule {
             ])
 
         // --- 图 2：ε₂（1200 点抽稀 600） ---
+        // W13h #46：显示窗裁剪——包络 exp(−(ħω−E_g)/Δ) 在 E_g+Δ+2 以外是死尾巴，
+        // 自动域被拉到 18 eV 时带边特征被挤进左半屏；并标注可见光带（宝石学语境）
+        let xWin = min(TwoBandMath.plotMax,
+                       input.slider("eg") + input.slider("decay") + 2.0)
+        let visibleBand: [ReferenceLine] = [
+            ReferenceLine(label: "可见光 760 nm", axis: .x, value: 1.63, style: .subtle),
+            ReferenceLine(label: "可见光 380 nm", axis: .x, value: 3.26, style: .subtle),
+        ]
         let chart2 = LineSeriesData(
             spec: .init(xAxis: .init(label: "光子能量 ħω (eV)"),
                         yAxis: .init(label: "ε₂ (a.u.)"),
                         seriesNames: ["ε₂ (模型)"]),
             series: [
-                .init(name: "ε₂ (模型)", points: Num.strided(payload.w, payload.eps2, stride: 2)),
+                .init(name: "ε₂ (模型)",
+                      points: Num.strided(payload.w, payload.eps2, stride: 2)
+                          .filter { $0.x <= xWin }),
             ],
             referenceLines: [
                 ReferenceLine(label: String(format: "吸收边 E_g = %.1f eV", input.slider("eg")),
@@ -335,13 +345,15 @@ struct TwoBandOpticalModule: SimModule {
                         yAxis: .init(label: "n, κ"),
                         seriesNames: ["n(ω)", "κ(ω)"]),
             series: [
-                .init(name: "n(ω)", points: Num.strided(payload.w, payload.n, stride: 2)),
-                .init(name: "κ(ω)", points: Num.strided(payload.w, payload.kappa, stride: 2)),
+                .init(name: "n(ω)", points: Num.strided(payload.w, payload.n, stride: 2)
+                    .filter { $0.x <= xWin }),
+                .init(name: "κ(ω)", points: Num.strided(payload.w, payload.kappa, stride: 2)
+                    .filter { $0.x <= xWin }),
             ],
             referenceLines: [
                 ReferenceLine(label: String(format: "吸收边 E_g = %.1f eV", input.slider("eg")),
                               axis: .x, value: input.slider("eg"), style: .subtle),
-            ])
+            ] + visibleBand)
 
         // --- 图 4：采样收敛 ---
         let sRel = abs(payload.totalWeight - TwoBandMath.totalWeightTarget)

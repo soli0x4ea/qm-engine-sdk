@@ -87,7 +87,13 @@ struct KleinGordonModuleTests {
             Issue.record("应为 lineSeries"); return
         }
         #expect(c.series.count == 3)
-        for s in c.series { #expect(s.points.count == 500, "2000/4 抽稀") }
+        // W13h #37：NR 抛物线出画截断（y ≤ 1.02·maxE₊）——E₊/E₋ 仍 500 点
+        #expect(c.series[0].points.count == 500)
+        #expect(c.series[1].points.count == 500)
+        let nr = c.series[2].points
+        #expect(nr.count < 500 && nr.count > 100, "NR 截断后 \(nr.count) 点")
+        let topY = c.series[0].points.map(\.y).max()! * 1.02
+        #expect(nr.allSatisfy { $0.y <= topY }, "NR 全部在画窗内")
         #expect(c.referenceLines.count == 3)
         #expect(result.summary.count == 4)
         #expect(result.theory?.formulas.count == 4)

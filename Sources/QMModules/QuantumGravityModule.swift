@@ -89,6 +89,8 @@ struct HawkingTemperatureModule: SimModule {
 
         let tH_sun = QuantumGravityMath.hawkingTemperature(M: mSun, hbar: hbar, c: c, G: G, kB: kB)
         let tH_m87 = QuantumGravityMath.hawkingTemperature(M: QuantumGravityMath.m87, hbar: hbar, c: c, G: G, kB: kB)
+        // W13h #41：log-log 直线自动域下拖 Mmax 画面不变——补端点标记 + 竖参考线
+        let tHMax = QuantumGravityMath.hawkingTemperature(M: Mmax, hbar: hbar, c: c, G: G, kB: kB)
 
         return SimResult(
             charts: [
@@ -98,7 +100,16 @@ struct HawkingTemperatureModule: SimModule {
                         .init(name: "T_H ∝ M^{-1}",
                               points: Num.strided(M, T, stride: 1)),
                     ],
-                    referenceLines: refLines)),
+                    referenceLines: refLines + [
+                        ReferenceLine(
+                            label: String(format: "M_max = %.2e M☉", input.slider("Mmax")),
+                            axis: .x, value: Mmax, style: .threshold),
+                    ],
+                    pointMarkers: [
+                        PointMarker(x: Mmax, y: tHMax,
+                                    label: String(format: "M_max → T_H = %.3e K", tHMax),
+                                    colorIndex: 1),
+                    ])),
             ],
             summary: [
                 .init(id: "mP", title: "普朗克质量 m_P",
@@ -112,6 +123,10 @@ struct HawkingTemperatureModule: SimModule {
                       note: "超大质量黑洞极冷"),
                 .init(id: "slope", title: "log-log 斜率",
                       value: "−1", note: "T_H ∝ M⁻¹（ Hawking 标度律）"),
+                .init(id: "mmax", title: "M_max 端点",
+                      value: String(format: "%.2e M☉ → %.3e K",
+                                    input.slider("Mmax"), tHMax),
+                      note: "滑杆上限（图上大圆点，拖动即沿线滑动）"),
             ],
             theory: TheoryCard(
                 title: "霍金温度（笔记 41 第二节、第六节）",
@@ -189,6 +204,8 @@ struct BlackHoleEntropyModule: SimModule {
 
         let sSun = QuantumGravityMath.bekensteinHawkingS(M: mSun, hbar: hbar, c: c, G: G)
         let sM87 = QuantumGravityMath.bekensteinHawkingS(M: QuantumGravityMath.m87, hbar: hbar, c: c, G: G)
+        // W13h #41：同霍金温度——M_max 端点标记 + 竖参考线（拖滑杆沿线滑动）
+        let sMax = QuantumGravityMath.bekensteinHawkingS(M: Mmax, hbar: hbar, c: c, G: G)
 
         return SimResult(
             charts: [
@@ -200,7 +217,16 @@ struct BlackHoleEntropyModule: SimModule {
                         .init(name: "Planck units: S_BH = 4π (M/m_P)^2",
                               points: Num.strided(M2, S2, stride: 1), colorIndex: 1),
                     ],
-                    referenceLines: refLines)),
+                    referenceLines: refLines + [
+                        ReferenceLine(
+                            label: String(format: "M_max = %.2e M☉", input.slider("Mmax")),
+                            axis: .x, value: Mmax, style: .threshold),
+                    ],
+                    pointMarkers: [
+                        PointMarker(x: Mmax, y: sMax,
+                                    label: String(format: "M_max → S/k_B = %.3e", sMax),
+                                    colorIndex: 2),
+                    ])),
             ],
             summary: [
                 .init(id: "mP", title: "普朗克质量 m_P",
@@ -212,6 +238,10 @@ struct BlackHoleEntropyModule: SimModule {
                       value: String(format: "%.3e", sM87), note: "随 M² 暴涨"),
                 .init(id: "law", title: "面积律",
                       value: "S = A/4", note: "S/k_B = A/(4 l_P²) = 4π(M/m_P)²（普朗克单位）"),
+                .init(id: "mmax", title: "M_max 端点",
+                      value: String(format: "%.2e M☉ → S/k_B = %.3e",
+                                    input.slider("Mmax"), sMax),
+                      note: "滑杆上限（图上大圆点，拖动即沿线滑动）"),
             ],
             theory: TheoryCard(
                 title: "Bekenstein-Hawking 黑洞熵（笔记 41 第二节、第六节）",

@@ -101,17 +101,18 @@ struct EPRBellModuleTests {
         }
     }
 
-    @Test("compute 输出结构：3 图（2 lineSeries 500 点 + 1 scatter）+ 摘要 7 条 + 理论卡")
+    @Test("compute 输出结构：5 图（2 lineSeries 500 点 + 2 scatter + Werner 联动图）+ 摘要 8 条")
     func computeStructure() async throws {
         let module = EPRBellModule()
         let result = try await module.compute(
             ParamValues.defaults(for: module.params), constants: try constants())
-        #expect(result.charts.count == 4)  // W13：+Tsirelson 采样分布散点
+        #expect(result.charts.count == 5)  // W13：+采样散点；W13h #30：+Werner 联动图
         guard case .lineSeries(let c0) = result.charts[0],
               case .lineSeries(let c1) = result.charts[1],
               case .scatter(let c2) = result.charts[2],
-      case .scatter(let c3) = result.charts[3] else {
-            Issue.record("应为 2 lineSeries + 1 scatter"); return
+              case .scatter(let c3) = result.charts[3],
+              case .lineSeries(let c4) = result.charts[4] else {
+            Issue.record("应为 3 lineSeries + 2 scatter"); return
         }
         // 单态 1000 点 stride 2 → 500；光子 2000 点 stride 4 → 500
         #expect(c0.series[0].points.count == 500)
@@ -124,8 +125,20 @@ struct EPRBellModuleTests {
         let expS = c2.series.map { $0.points.first!.x }
         #expect(expS == [2.697, 2.25, 2.42])
         #expect(c2.referenceLines.count == 2)
-        #expect(result.summary.count == 7)
-        #expect(c3.series.count == 1)  // W13：采样散点单系列
+        #expect(result.summary.count == 8)
+        // W13h #30：采样散点（密度随 N 缩放）+ 极值参考线
+        #expect(c3.series.count == 1)
+        #expect(c3.series[0].points.count >= 550 && c3.series[0].points.count <= 610,
+                "默认 N=20 万 → keepSamples=600（含端点 601）")
+        #expect(c3.referenceLines.count == 3, "LHV 2 + max S + min S")
+        // Werner 联动图：|S|(p) 200 点 + 当前 p 标记 + 违反阈参考线
+        #expect(c4.series.count == 1 && c4.series[0].points.count == 200)
+        #expect(c4.series[0].points.allSatisfy {
+            abs($0.y - $0.x * 2 * 2.0.squareRoot()) < 1e-12
+        }, "|S|(p) = p·2√2 逐点")
+        #expect(c4.pointMarkers.count == 1)
+        #expect(abs(c4.pointMarkers[0].x - 0.9) < 1e-12, "默认 p = 0.9")
+        #expect(c4.referenceLines.count == 2)
         #expect(result.theory?.formulas.count == 4)
     }
 
