@@ -113,14 +113,14 @@ struct CasimirModule: SimModule {
         return SimResult(
             charts: [
                 .lineSeries(LineSeriesData(
-                    spec: charts[0].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(0),
                     series: [
                         .init(name: "|P(d)| = π²ℏc/(240 d⁴)",
                               points: zip(d.map { $0 * 1e6 }, p).map { Point(x: $0, y: $1) }),
                     ],
                     referenceLines: [])),
                 .lineSeries(LineSeriesData(
-                    spec: charts[1].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(1),
                     series: [
                         .init(name: "d ln P / d ln d",
                               points: zip(d.dropLast().map { $0 * 1e6 }, slopes)
@@ -243,7 +243,7 @@ struct ModeQuantizationModule: SimModule {
         return SimResult(
             charts: [
                 .lineSeries(LineSeriesData(
-                    spec: charts[0].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(0),
                     series: [
                         .init(name: "ω_k = 2(v/a)|sin(ka/2)|",
                               points: zip(xKA, omegas.map { $0 / 1e12 }).map { Point(x: $0, y: $1) }),
@@ -253,14 +253,14 @@ struct ModeQuantizationModule: SimModule {
                               axis: .y, value: omegaMax / 1e12, style: .subtle),
                     ])),
                 .lineSeries(LineSeriesData(
-                    spec: charts[1].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(1),
                     series: [
                         .init(name: "ℏω_k/2",
                               points: (0..<N).map { Point(x: Double($0), y: e0PerMode[$0] / 1e-22) }),
                     ],
                     referenceLines: [])),
                 .lineSeries(LineSeriesData(
-                    spec: charts[2].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(2),
                     series: [
                         .init(name: "T = 10 K",
                               points: zip(xKA, occ10).map { Point(x: $0, y: max($1, 1e-6)) }),

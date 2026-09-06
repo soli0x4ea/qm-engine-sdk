@@ -115,8 +115,8 @@ struct PhotonStatisticsModule: SimModule {
 
         return SimResult(
             charts: [
-                .bars(BarData(spec: charts[0].barSpec!, bars: cohBars)),
-                .bars(BarData(spec: charts[1].barSpec!, bars: thBars)),
+                .bars(BarData(spec: charts.requireBar(0), bars: cohBars)),
+                .bars(BarData(spec: charts.requireBar(1), bars: thBars)),
             ],
             summary: [
                 .init(id: "mean_coh", title: "⟨n⟩ 相干", value: String(format: "%.6g", mCoh),

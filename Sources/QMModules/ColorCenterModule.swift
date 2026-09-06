@@ -6,7 +6,7 @@ import EngineKit
 /// 色心与晶格缺陷纯函数核：F 心类氢有效质量近似、电子-声子吸收/发射谱（泊松边带）。
 enum ColorCenterMath {
     /// h·c（eV·nm），CODATA 精确派生量（脚本固定 1239.841984）。
-    static let hcEVnm: Double = 1239.841984
+    static let hcEVnm = Num.hcEVnm
 
     /// 有效里德伯 R* = R_H / ε∞²（取 m*≈m_e）。
     static func rydbergStarEV(epsInf: Double, rH_eV: Double) -> Double {
@@ -135,8 +135,8 @@ struct FCenterHydrogenModule: SimModule {
 
         return SimResult(
             charts: [
-                .bars(BarData(spec: charts[0].barSpec!, bars: bars)),
-                .levelDiagram(LevelDiagramData(spec: charts[1].levelDiagramSpec!,
+                .bars(BarData(spec: charts.requireBar(0), bars: bars)),
+                .levelDiagram(LevelDiagramData(spec: charts.requireLevelDiagram(1),
                                               levels: levels, transitions: transitions)),
             ],
             summary: modelSummary + [

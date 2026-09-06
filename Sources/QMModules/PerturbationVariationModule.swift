@@ -226,12 +226,12 @@ struct PerturbationVariationModule: SimModule {
             return s
         }()
         let chart0 = LineSeriesData(
-            spec: charts[0].lineSeriesSpec!,
+            spec: charts.requireLineSeries(0),
             series: chart0Series,
             referenceLines: [ReferenceLine(label: String(format: "当前 λ = %.3f", lam),
                                            axis: .x, value: lam, style: .subtle)])
         let chartE = LineSeriesData(
-            spec: charts[1].lineSeriesSpec!,
+            spec: charts.requireLineSeries(1),
             series: [
                 .init(name: "仅到一阶 E⁰+E¹", points: payload.e1Scan, colorIndex: 3),
                 .init(name: "二阶微扰 E⁰+E¹+E²", points: payload.pertScan, colorIndex: 1),
@@ -242,7 +242,7 @@ struct PerturbationVariationModule: SimModule {
         // W13i #19 布局修订：α* 竖线 + E* 横线两条参考线换成极小点实心标记（消除底部
         // 标注挤压），只保留精确值横线做上界对照；扫描窗随 Z 居中，抛物线不再偏居一侧。
         let chart1 = LineSeriesData(
-            spec: charts[2].lineSeriesSpec!,
+            spec: charts.requireLineSeries(2),
             series: [.init(name: "E(α) 扫描", points: payload.heScan)],
             referenceLines: [
                 ReferenceLine(label: String(format: "精确非相对论 %.4f Ha", heExact ?? .nan),

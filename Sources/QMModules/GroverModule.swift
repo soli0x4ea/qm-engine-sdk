@@ -104,7 +104,7 @@ struct GroverModule: SimModule {
         return SimResult(
             charts: [
                 .lineSeries(LineSeriesData(
-                    spec: charts[0].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(0),
                     series: [
                         .init(name: "P(n) = sin²((2n+1)θ)",
                               points: zip(ns.map(Double.init), probs).map { Point(x: $0, y: $1) }),

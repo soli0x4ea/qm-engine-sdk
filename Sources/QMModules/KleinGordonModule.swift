@@ -87,7 +87,7 @@ struct KleinGordonDispersionModule: SimModule {
         return SimResult(
             charts: [
                 .lineSeries(LineSeriesData(
-                    spec: charts[0].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(0),
                     series: [
                         .init(name: "E₊ = +√((pc)² + (mc²)²)",
                               points: Num.strided(pc, ePos, stride: 4)),

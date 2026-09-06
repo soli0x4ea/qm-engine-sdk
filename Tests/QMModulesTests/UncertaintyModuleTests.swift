@@ -35,12 +35,10 @@ struct UncertaintyModuleTests {
     @Test("fixture 对拍：高斯 |ψ(x)|² 与势阱 |ψ₁(x)|²（512 点，rel < 1e-6）")
     func positionCurvesMatchFixtures() throws {
         let fx = try ModuleFixture.load("不确定性关系_等号与势阱__v2022")
-        let cs = try constants()
-        _ = cs
 
         // fig0ax0 线 0：|ψ(x)|² = ψ²/ψ_max（σ₀ = 1）
         let (fx0, fy0) = try fx.line(0, 0, index: 0)
-        let (grid, psiGrid) = UncertaintyMath.gaussianState(sigma0: Self.sigma0)
+        let (_, psiGrid) = UncertaintyMath.gaussianState(sigma0: Self.sigma0)
         var psiMax = 0.0
         for v in psiGrid where v > psiMax { psiMax = v }
         let norm = pow(2 * .pi, -0.25)

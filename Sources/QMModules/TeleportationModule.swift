@@ -92,7 +92,7 @@ struct TeleportationFidelityModule: SimModule {
         return SimResult(
             charts: [
                 .lineSeries(LineSeriesData(
-                    spec: charts[0].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(0),
                     series: [
                         .init(name: "F(p) = (p+1)/2",
                               points: zip(ps, curve).map { Point(x: $0, y: $1) }),
@@ -178,7 +178,7 @@ struct DenseCodingModule: SimModule {
         return SimResult(
             charts: [
                 .lineSeries(LineSeriesData(
-                    spec: charts[0].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(0),
                     series: [
                         .init(name: "I_total(p)",
                               points: zip(ps, curve).map { Point(x: $0, y: $1) }),

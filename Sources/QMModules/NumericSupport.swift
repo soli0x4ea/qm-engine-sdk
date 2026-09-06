@@ -5,6 +5,17 @@ import EngineKit
 enum Num {
 
     /// np.linspace：闭区间等距 count 点。
+    /// 光学能量↔波长换算常数 hc（eV·nm，CODATA）；W13k 审核上收——原 4 个模块各抄一份。
+    static let hcEVnm: Double = 1239.841984
+
+    /// 均匀网格梯形积分（W13k 审核上收——原 3 个模块各抄一份，且其中一份误为矩形和）。
+    static func trapz(_ y: [Double], dx: Double) -> Double {
+        guard y.count >= 2 else { return 0 }
+        var s = 0.5 * (y[0] + y[y.count - 1])
+        for v in y.dropFirst().dropLast() { s += v }
+        return s * dx
+    }
+
     static func linspace(_ from: Double, _ to: Double, count: Int) -> [Double] {
         precondition(count >= 2, "linspace 需要 count >= 2")
         return (0..<count).map { from + (to - from) * Double($0) / Double(count - 1) }

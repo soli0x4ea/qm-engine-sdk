@@ -22,7 +22,7 @@ struct MeasurementTheoryModuleTests {
         let dx = x[1] - x[0]
         var sq = [Double](repeating: 0, count: x.count)
         for i in x.indices { sq[i] = phi0[i] * phi0[i] }
-        let nrm = MeasurementTheoryMath.trapz(sq, dx: dx)
+        let nrm = Num.trapz(sq, dx: dx)
         #expect(abs(nrm - 1.0) < 1e-6, "nrm = \(nrm)")
     }
 

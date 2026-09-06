@@ -154,10 +154,10 @@ struct SchrodingerFDWellModule: SimModule {
         let analyticPts = (1...k).map { Point(x: Double($0), y: analyticEv[$0 - 1]) }
 
         let chart0 = LineSeriesData(
-            spec: charts[0].lineSeriesSpec!,
+            spec: charts.requireLineSeries(0),
             series: psiSeries)
         let chart1 = LineSeriesData(
-            spec: charts[1].lineSeriesSpec!,
+            spec: charts.requireLineSeries(1),
             series: [
                 .init(name: "解析 E_n ∝ n²", points: analyticPts),
                 .init(name: "有限差分数值", points: numericPts),

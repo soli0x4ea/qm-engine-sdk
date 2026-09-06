@@ -137,14 +137,14 @@ struct SecondOrderCoherenceModule: SimModule {
         return SimResult(
             charts: [
                 .bars(BarData(
-                    spec: charts[0].barSpec!,
+                    spec: charts.requireBar(0),
                     bars: [
                         .init(label: "相干态（泊松）", value: g2Coh),
                         .init(label: "热态（玻色-爱因斯坦）", value: g2Th),
                         .init(label: "Fock |1⟩（反聚束）", value: g2Fock1),
                     ])),
                 .contour(ContourData(
-                    spec: charts[1].contourSpec!,
+                    spec: charts.requireContour(1),
                     xGrid: xs, yGrid: ps, values: w,
                     highlightLevels: [SecondOrderCoherenceMath.oneSigmaLevel()])),
             ],

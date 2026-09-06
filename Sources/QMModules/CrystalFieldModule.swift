@@ -81,7 +81,7 @@ struct CrystalFieldModelModule: SimModule {
         return SimResult(
             charts: [
                 .lineSeries(LineSeriesData(
-                    spec: charts[0].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(0),
                     series: [
                         .init(name: "High-spin  t2g³ eg²",
                               points: Num.strided(delta, eHS, stride: 1)),
@@ -168,7 +168,7 @@ struct CrystalFieldTanabeSuganoModule: SimModule {
         return SimResult(
             charts: [
                 .lineSeries(LineSeriesData(
-                    spec: charts[0].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(0),
                     series: [
                         .init(name: "^3T1g(F) ground", points: Num.strided(xB, t1f, stride: 1)),
                         .init(name: "^3T2g(F)", points: Num.strided(xB, t2g, stride: 1), colorIndex: 1),

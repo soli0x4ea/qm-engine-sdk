@@ -96,7 +96,7 @@ struct PairProductionModule: SimModule {
         return SimResult(
             charts: [
                 .schematic(SchematicData(
-                    spec: charts[0].schematicSpec!,
+                    spec: charts.requireSchematic(0),
                     bands: [
                         .init(label: "亚阈值区（真空中无自由对产生）",
                               xRange: -1.2...1.2, yRange: 0...eTh,
@@ -197,7 +197,7 @@ struct DiracSeaHoleModule: SimModule {
         return SimResult(
             charts: [
                 .schematic(SchematicData(
-                    spec: charts[0].schematicSpec!,
+                    spec: charts.requireSchematic(0),
                     bands: [
                         .init(label: "负能连续谱（狄拉克海，已填满）",
                               xRange: -1.3...1.3, yRange: -eBound...0,

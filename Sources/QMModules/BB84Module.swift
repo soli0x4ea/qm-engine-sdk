@@ -89,7 +89,6 @@ struct BB84Module: SimModule {
         let rounds = [1.0, 2.0, 3.0, 4.0]
         let aliceBits = ["0｜+", "1｜×", "1｜+", "0｜×"]
         let bobResults = [("0 ✓", true), ("1 ✓", true), ("1 ✗ 基矢误", false), ("0 ✓", true)]
-        let bobKept = ["0 (留)", "1 (留)", "— (弃)", "0 (留)"]
 
         var markers: [SchematicMarker] = []
         for (i, x) in rounds.enumerated() {
@@ -112,7 +111,7 @@ struct BB84Module: SimModule {
         }
 
         let chart1 = SchematicData(
-            spec: charts[1].schematicSpec!,
+            spec: charts.requireSchematic(1),
             bands: [
                 SchematicBand(label: "Alice：随机比特 + 制备基矢",
                               xRange: 0.55...4.45, yRange: 3.72...4.28, colorIndex: 0),

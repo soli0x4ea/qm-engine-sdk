@@ -15,7 +15,7 @@ enum ColorMechanismMath {
     static func deltaToLambdaNm(deltaCm: Double) -> Double { 1.0e7 / deltaCm }
 
     /// h·c（eV·nm），CODATA 精确派生量（脚本固定 1239.841984）。
-    static let hcEVnm: Double = 1239.841984
+    static let hcEVnm = Num.hcEVnm
 
     /// 八面体 O_h 场 d 轨道分裂（Dq 单位）：E(eg)=+6Dq, E(t2g)=−4Dq, Δ_o=10Dq。
     static func octahedralSplitting(dqCm: Double) -> (eEg: Double, eT2g: Double, delta: Double, barycenter: Double) {
@@ -76,7 +76,7 @@ struct ColorVibrationalCouplingModule: SimModule {
         return SimResult(
             charts: [
                 .lineSeries(LineSeriesData(
-                    spec: charts[0].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(0),
                     series: [
                         .init(name: "I(ξ) = ξ²/(ξ²+ξ₀²)",
                               points: Num.strided(xi, I, stride: 1)
@@ -193,7 +193,7 @@ struct ColorMechanismModelModule: SimModule {
         return SimResult(
             charts: [
                 .lineSeries(LineSeriesData(
-                    spec: charts[0].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(0),
                     series: [
                         .init(name: "λ = 10⁷ / Δ (nm)",
                               points: Num.strided(delta, lam, stride: 1)),
@@ -206,7 +206,7 @@ struct ColorMechanismModelModule: SimModule {
                                     colorIndex: 1),
                     ])),
                 .scatter(ScatterData(
-                    spec: charts[1].scatterSpec!,
+                    spec: charts.requireScatter(1),
                     series: scatterSeries)),
             ],
             summary: mineralSummary + [

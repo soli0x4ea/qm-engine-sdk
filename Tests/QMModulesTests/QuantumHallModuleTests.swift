@@ -46,7 +46,6 @@ struct QuantumHallModuleTests {
     func plateau() throws {
         let cs = try constants()
         let h = try cs.value("h"), e = try cs.value("e")
-        let rk = h / (e * e)
         // 脚本四档：Nfilled = max(1, ⌊ν⌋)（B=10 T 时 ν≈0.99 被钳到 1）
         let expected: [(Double, Double, Double)] = [
             (10.0, 1, 25812.8), (5.0, 1, 25812.8), (3.33, 2, 12906.4), (2.0, 4, 6453.2),

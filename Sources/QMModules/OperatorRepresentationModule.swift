@@ -8,11 +8,6 @@ import EngineKit
 enum OperatorRepresentationMath {
 
     /// 脚本 trapz：均匀网格 Σy·dx。
-    static func trapz(_ y: [Double], dx: Double) -> Double {
-        var s = 0.0
-        for v in y { s += v }
-        return s * dx
-    }
 
     /// 位置表象高斯：ψ = (πσ²)^{−1/4}·e^{−x²/2σ²}，数值归一化。
     static func gaussianState(sigmaX: Double, count: Int = 4096, L: Double = 40.0)
@@ -23,7 +18,7 @@ enum OperatorRepresentationMath {
         var psi = x.map { pref * exp(-$0 * $0 / (2 * sigmaX * sigmaX)) }
         var sq = [Double](repeating: 0, count: count)
         for i in 0..<count { sq[i] = psi[i] * psi[i] }
-        let nrm = trapz(sq, dx: dx).squareRoot()
+        let nrm = Num.trapz(sq, dx: dx).squareRoot()
         for i in 0..<count { psi[i] /= nrm }
         return (x, psi, dx)
     }
@@ -44,12 +39,12 @@ enum OperatorRepresentationMath {
         }
         let p = FFT.fftshift(FFT.fftfreq(n, d: dx)).map { $0 * 2 * .pi }
         let dp = abs(p[1] - p[0])
-        let nrm = trapz(phi2, dx: dp)
+        let nrm = Num.trapz(phi2, dx: dp)
         for i in 0..<n { phi2[i] /= nrm }
         return (p, phi2)
     }
 
-    /// 脚本口径矩：mean = trapz(x·ρ)，var = trapz((x−mean)²·ρ)（先减后平方）。
+    /// 脚本口径矩：mean = Num.trapz(x·ρ)，var = Num.trapz((x−mean)²·ρ)（先减后平方）。
     static func moments(grid: [Double], density: [Double]) -> (mean: Double, std: Double) {
         let dx = abs(grid[1] - grid[0])
         var m0 = 0.0, m1 = 0.0

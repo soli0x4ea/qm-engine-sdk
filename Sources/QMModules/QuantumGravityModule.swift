@@ -95,7 +95,7 @@ struct HawkingTemperatureModule: SimModule {
         return SimResult(
             charts: [
                 .lineSeries(LineSeriesData(
-                    spec: charts[0].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(0),
                     series: [
                         .init(name: "T_H ∝ M^{-1}",
                               points: Num.strided(M, T, stride: 1)),
@@ -210,7 +210,7 @@ struct BlackHoleEntropyModule: SimModule {
         return SimResult(
             charts: [
                 .lineSeries(LineSeriesData(
-                    spec: charts[0].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(0),
                     series: [
                         .init(name: "S_BH/k_B = A/(4 l_P^2) ∝ M^2",
                               points: Num.strided(M1, S1, stride: 1)),

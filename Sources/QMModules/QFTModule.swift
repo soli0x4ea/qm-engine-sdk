@@ -209,10 +209,10 @@ struct QFTModule: SimModule {
         return SimResult(
             charts: [
                 .bars(BarData(
-                    spec: charts[0].barSpec!,
+                    spec: charts.requireBar(0),
                     bars: zip(labels, probs).map { BarItem(label: $0, value: $1) })),
                 .lineSeries(LineSeriesData(
-                    spec: charts[1].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(1),
                     series: [reSeries, imSeries],
                     referenceLines: [
                         .init(label: "振幅包络 +1/√N", axis: .y,

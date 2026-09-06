@@ -8,7 +8,7 @@ enum SpectroscopyMath {
     /// 1 Debye = 3.33564095×10⁻³⁰ C·m
     static let debyeCm: Double = 3.33564095e-30
     /// h·c（eV·nm），CODATA 精确派生量
-    static let hcEVnm: Double = 1239.841984
+    static let hcEVnm = Num.hcEVnm
 
     /// 爱因斯坦 A 系数（SI）：A = ω³ |d|² / (3π ε₀ ħ c³)
     static func einsteinA(wavelength_m: Double, d_Cm: Double,
@@ -141,14 +141,14 @@ struct FluorescenceLifetimeModule: SimModule {
         return SimResult(
             charts: [
                 .dualAxisLineSeries(DualAxisLineSeriesData(
-                    spec: charts[0].dualAxisLineSeriesSpec!,
+                    spec: charts.requireDualAxisLineSeries(0),
                     primary: [.init(name: "A(λ)",
                                    points: Num.strided(wlNm, aWl, stride: 1))],
                     secondary: [.init(name: "τ(λ)",
                                      points: Num.strided(wlNm, tauWl.map { $0 * 1e9 }, stride: 1),
                                      colorIndex: 1)])),
                 .lineSeries(LineSeriesData(
-                    spec: charts[1].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(1),
                     series: [
                         .init(name: "fluorescence (tau~1.6 ns, allowed E1)",
                               points: Num.strided(t, iFluor, stride: 1)),
@@ -156,7 +156,7 @@ struct FluorescenceLifetimeModule: SimModule {
                               points: Num.strided(t, iPhos, stride: 1), colorIndex: 1),
                     ])),
                 .schematic(SchematicData(
-                    spec: charts[2].schematicSpec!,
+                    spec: charts.requireSchematic(2),
                     callouts: callouts, referenceLines: refLines)),
             ],
             summary: [

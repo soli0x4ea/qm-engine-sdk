@@ -118,7 +118,7 @@ struct JaynesCummingsModule: SimModule {
         return SimResult(
             charts: [
                 .lineSeries(LineSeriesData(
-                    spec: charts[0].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(0),
                     series: [
                         .init(name: "腔 QED（里德伯，g/2π=47 kHz）",
                               points: Num.strided(tCQED.map { $0 * 1e6 }, peCQED, stride: 1)),
@@ -130,7 +130,7 @@ struct JaynesCummingsModule: SimModule {
                         .init(label: "P_e = 1（初始激发）", axis: .y, value: 1, style: .subtle),
                     ])),
                 .lineSeries(LineSeriesData(
-                    spec: charts[1].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(1),
                     series: [
                         .init(name: "电路 QED",
                               points: Num.strided(deltaCircuit.map { $0 / (2 * .pi * 1e6) }, aCircuit, stride: 1),
@@ -230,7 +230,7 @@ struct QubitRabiModule: SimModule {
             let t = Num.linspace(0, p.tMax, count: 2000)
             let pe = t.map { CavityQEDMath.drivenQubitPe($0, omegaR: omegaR, t2: p.t2) }
             out.append(.lineSeries(LineSeriesData(
-                spec: charts[p.colorIndex].lineSeriesSpec!,
+                spec: charts.requireLineSeries(p.colorIndex),
                 series: [.init(name: p.name,
                                points: Num.strided(t.map { $0 * 1e6 }, pe, stride: 2),
                                colorIndex: p.colorIndex)],

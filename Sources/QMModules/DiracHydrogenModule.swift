@@ -96,7 +96,7 @@ struct DiracHydrogenModule: SimModule {
         return SimResult(
             charts: [
                 .levelDiagram(LevelDiagramData(
-                    spec: charts[0].levelDiagramSpec!,
+                    spec: charts.requireLevelDiagram(0),
                     levels: [
                         .init(label: "1S₁/₂ (Dirac)", energy: e1S),
                         .init(label: "2S₁/₂ = 2P₁/₂ (Dirac)", energy: e2S),
@@ -104,7 +104,7 @@ struct DiracHydrogenModule: SimModule {
                         .init(label: "n=2 Schrödinger（简并）", energy: e2Schr),
                     ])),
                 .levelDiagram(LevelDiagramData(
-                    spec: charts[1].levelDiagramSpec!,
+                    spec: charts.requireLevelDiagram(1),
                     levels: [
                         .init(label: "2S₁/₂ = 2P₁/₂ (Dirac)", energy: e2S),
                         .init(label: "2P₃/₂ (Dirac)", energy: e2P3),

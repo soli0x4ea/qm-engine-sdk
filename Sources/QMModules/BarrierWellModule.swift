@@ -288,17 +288,17 @@ struct BarrierWellModule: SimModule {
             v0: v0w, width: lMeters, mass: mElectron, hbar: hbar)
         let z0 = sqrt(2.0 * mElectron * v0w) / hbar * lMeters / 2.0
 
-        let chart0 = LineSeriesData(spec: charts[0].lineSeriesSpec!,
+        let chart0 = LineSeriesData(spec: charts.requireLineSeries(0),
                                     series: [.init(name: "精确 T(E)", points: payload.tE)])
-        let chart1 = LineSeriesData(spec: charts[1].lineSeriesSpec!,
+        let chart1 = LineSeriesData(spec: charts.requireLineSeries(1),
                                     series: [
                                         .init(name: "精确 T(a)", points: payload.tA),
                                         .init(name: "厚垒极限 e^(−2κa)", points: payload.tlA),
                                     ])
-        let chart2 = LineSeriesData(spec: charts[2].lineSeriesSpec!,
+        let chart2 = LineSeriesData(spec: charts.requireLineSeries(2),
                                     series: psiSeries)
         let chart3 = LineSeriesData(
-            spec: charts[3].lineSeriesSpec!,
+            spec: charts.requireLineSeries(3),
             series: energySeries,
             referenceLines: [
                 ReferenceLine(label: "V = 0（渐近线）", axis: .y, value: 0, style: .subtle),

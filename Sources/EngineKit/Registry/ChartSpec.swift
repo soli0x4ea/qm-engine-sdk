@@ -221,6 +221,52 @@ public struct FrameStackSpec: Sendable, Equatable {
 
 /// 图表声明四类封装（W2 冻结；W4+ 追加热图/等高线、示意图、Bloch 球、帧栈动画）。
 /// 声明只含静态元数据；数据由 SimResult.charts 携带，按下标一一对应。
+
+/// W13k 审核新增：带定位信息的类型解包（替代散布 60+ 处的 `charts[i].xxxSpec!`）。
+/// 索引与同模块 charts 声明同源构造；fatalError 带下标与期望类型，崩时可直接定位。
+public extension [ChartSpec] {
+    private func unwrap<T>(_ i: Int, _ kind: String, _ extract: (ChartSpec) -> T?) -> T {
+        guard indices.contains(i) else {
+            fatalError("charts[\(i)] 越界（共 \(count) 张）")
+        }
+        guard let v = extract(self[i]) else {
+            fatalError("charts[\(i)] 不是 \(kind)")
+        }
+        return v
+    }
+
+    func requireLineSeries(_ i: Int) -> LineSeriesSpec {
+        unwrap(i, "lineSeries") { if case let .lineSeries(v) = $0 { return v }; return nil }
+    }
+    func requireLevelDiagram(_ i: Int) -> LevelDiagramSpec {
+        unwrap(i, "levelDiagram") { if case let .levelDiagram(v) = $0 { return v }; return nil }
+    }
+    func requireBar(_ i: Int) -> BarSpec {
+        unwrap(i, "bars") { if case let .bars(v) = $0 { return v }; return nil }
+    }
+    func requireScatter(_ i: Int) -> ScatterSpec {
+        unwrap(i, "scatter") { if case let .scatter(v) = $0 { return v }; return nil }
+    }
+    func requireHeatmap(_ i: Int) -> HeatmapSpec {
+        unwrap(i, "heatmap") { if case let .heatmap(v) = $0 { return v }; return nil }
+    }
+    func requireDualAxisLineSeries(_ i: Int) -> DualAxisLineSeriesSpec {
+        unwrap(i, "dualAxisLineSeries") { if case let .dualAxisLineSeries(v) = $0 { return v }; return nil }
+    }
+    func requireSchematic(_ i: Int) -> SchematicSpec {
+        unwrap(i, "schematic") { if case let .schematic(v) = $0 { return v }; return nil }
+    }
+    func requireContour(_ i: Int) -> ContourSpec {
+        unwrap(i, "contour") { if case let .contour(v) = $0 { return v }; return nil }
+    }
+    func requireFrameStack(_ i: Int) -> FrameStackSpec {
+        unwrap(i, "frameStack") { if case let .frameStack(v) = $0 { return v }; return nil }
+    }
+    func requireBloch(_ i: Int) -> BlochSpec {
+        unwrap(i, "bloch") { if case let .bloch(v) = $0 { return v }; return nil }
+    }
+}
+
 public enum ChartSpec: Sendable, Equatable {
     case lineSeries(LineSeriesSpec)
     case levelDiagram(LevelDiagramSpec)

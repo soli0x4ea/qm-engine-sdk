@@ -19,32 +19,9 @@ enum HydrogenRadialMath {
     /// 参与求解的角量子数（脚本 l = 0, 1, 2）。
     static let angularList = [0, 1, 2]
 
-    /// 径向三对角哈密顿（行主序稠密）+ 内点网格 r。
-    /// 约化质量 μ = m_e·m_p/(m_e+m_p) 由调用方传入。
-    static func radialHamiltonian(l: Int, rMax: Double, points N: Int,
-                                  mu: Double, hbar: Double,
-                                  eCharge: Double, eps0: Double, z: Double = 1)
-        -> (r: [Double], a: [Double]) {
-        let h = rMax / Double(N)
-        let m = N - 1                          // 内点数
-        let r = (1...m).map { Double($0) * h }
-        let kinDiag = hbar * hbar / (mu * h * h)
-        let off = -hbar * hbar / (2.0 * mu * h * h)
-        var a = [Double](repeating: 0, count: m * m)
-        for i in 0..<m {
-            let cent = Double(l * (l + 1)) * hbar * hbar / (2.0 * mu * r[i] * r[i])
-            let coul = -z * eCharge * eCharge / (4.0 * .pi * eps0 * r[i])
-            a[i * m + i] = kinDiag + cent + coul
-        }
-        for i in 0..<(m - 1) {
-            a[i * m + i + 1] = off
-            a[(i + 1) * m + i] = off
-        }
-        return (r, a)
-    }
 
     /// 径向三对角哈密顿的 (d, e) 表示：d = 对角，e = 次对角（常数 off）。
-    /// 数值与 `radialHamiltonian` 稠密矩阵的对应元素逐一相同（同公式同序）。
+    /// 数值口径与有限差分五点格式逐一相同（W13k：稠密版已删，本函数为唯一实现）。
     static func tridiagonalElements(l: Int, rMax: Double, points N: Int,
                                     mu: Double, hbar: Double,
                                     eCharge: Double, eps0: Double, z: Double = 1)
@@ -250,11 +227,11 @@ struct HydrogenRadialModule: SimModule {
         let worstLowN = relErrs.prefix(4).max() ?? 0
 
         let chart0 = LineSeriesData(
-            spec: charts[0].lineSeriesSpec!,
+            spec: charts.requireLineSeries(0),
             series: densitySeries,
             referenceLines: densityRefs)
         let chart1 = LineSeriesData(
-            spec: charts[1].lineSeriesSpec!,
+            spec: charts.requireLineSeries(1),
             series: [
                 .init(name: "解析 −Z²Ry/n²", points: analyticPts),
                 .init(name: "有限差分数值 (l=0)", points: numericPts),

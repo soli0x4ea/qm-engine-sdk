@@ -27,11 +27,6 @@ enum MeasurementTheoryMath {
     }
 
     /// 脚本 trapz：均匀网格 dx·(Σy − (y₀+y_{n−1})/2)。
-    static func trapz(_ y: [Double], dx: Double) -> Double {
-        var s = 0.0
-        for v in y { s += v }
-        return dx * (s - 0.5 * (y[0] + y[y.count - 1]))
-    }
 
     /// 指针初态网格：x ∈ [−10σ, 10σ] × 4000，φ₀ = exp(−x²/2σ²)/(√π·σ)^½。
     static func pointerGrid(sigma: Double, count: Int = 4000)

@@ -17,7 +17,8 @@ let package = Package(
     targets: [
         .target(
             name: "EngineKit",
-            resources: [.process("Resources")]
+            resources: [Resource.process("Resources")],
+            swiftSettings: [SwiftSetting.define("ACCELERATE_NEW_LAPACK")]
         ),
         // W3：真值模块层（SOP 移植目标）。
         // W3 包体裁决：移除 mlx-swift（26 MB 包体 + 无 Metal 模拟器必崩），
@@ -28,7 +29,8 @@ let package = Package(
             dependencies: [
                 "EngineKit",
                 .product(name: "Numerics", package: "swift-numerics"),
-            ]
+            ],
+            swiftSettings: [SwiftSetting.define("ACCELERATE_NEW_LAPACK")]
         ),
         .testTarget(
             name: "EngineKitTests",

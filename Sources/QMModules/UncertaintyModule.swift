@@ -9,11 +9,6 @@ import EngineKit
 enum UncertaintyMath {
 
     /// 脚本 trapz：均匀网格 dx·(Σy − (y₀+y_{n−1})/2)。
-    static func trapz(_ y: [Double], dx: Double) -> Double {
-        var s = 0.0
-        for v in y { s += v }
-        return dx * (s - 0.5 * (y[0] + y[y.count - 1]))
-    }
 
     /// 高斯波包：ψ = (2πσ₀²)^(−1/4)·exp(−x²/4σ₀²)，x ∈ [−12σ₀, 12σ₀] × 4000。
     static func gaussianState(sigma0: Double, count: Int = 4000)
@@ -37,8 +32,8 @@ enum UncertaintyMath {
             sq[i] = psi[i] * psi[i]
             x2w[i] = x[i] * x[i] * sq[i]
         }
-        let norm = trapz(sq, dx: dxStep)
-        let dxStd = (trapz(x2w, dx: dxStep) / norm).squareRoot()
+        let norm = Num.trapz(sq, dx: dxStep)
+        let dxStd = (Num.trapz(x2w, dx: dxStep) / norm).squareRoot()
 
         let shifted = FFT.ifftshift(psi)
         let f = FFT.fft(shifted)
@@ -57,8 +52,8 @@ enum UncertaintyMath {
             k2w[i] = k[i] * k[i] * pd[i]
         }
         let dk = abs(k[1] - k[0])
-        let knorm = trapz(pd, dx: dk)
-        let dpStd = (trapz(k2w, dx: dk) / knorm).squareRoot()
+        let knorm = Num.trapz(pd, dx: dk)
+        let dpStd = (Num.trapz(k2w, dx: dk) / knorm).squareRoot()
         return (k, pd, dxStd, dpStd)
     }
 
@@ -85,9 +80,9 @@ enum UncertaintyMath {
             xw[i] = x[i] * sq[i]
             x2w[i] = x[i] * x[i] * sq[i]
         }
-        let norm = trapz(sq, dx: dxStep)
-        let xmean = trapz(xw, dx: dxStep) / norm
-        let x2 = trapz(x2w, dx: dxStep) / norm
+        let norm = Num.trapz(sq, dx: dxStep)
+        let xmean = Num.trapz(xw, dx: dxStep) / norm
+        let x2 = Num.trapz(x2w, dx: dxStep) / norm
         let dxStd = (x2 - xmean * xmean).squareRoot()
 
         var second = [Double](repeating: 0, count: count)
@@ -96,7 +91,7 @@ enum UncertaintyMath {
         }
         var prod = [Double](repeating: 0, count: count)
         for i in 0..<count { prod[i] = psi[i] * second[i] }
-        let p2 = -trapz(prod, dx: dxStep) / norm
+        let p2 = -Num.trapz(prod, dx: dxStep) / norm
         return (x, sq, dxStd, p2.squareRoot())
     }
 

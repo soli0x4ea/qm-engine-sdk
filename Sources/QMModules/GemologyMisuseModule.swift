@@ -33,7 +33,7 @@ enum GemologyMisuseMath {
     static func wavenumberToNm(_ cm: Double) -> Double { 1.0e7 / cm }
 
     /// 光子能量 (eV)：E = hc/λ，hc 取 CODATA 精确派生值（与 ColorMechanismMath 同一口径）。
-    static let hcEVnm: Double = 1239.841984
+    static let hcEVnm = Num.hcEVnm
     static func energyEV(wavelengthNm: Double) -> Double { hcEVnm / wavelengthNm }
 
     /// von Neumann 熵（bit）随 Bloch 半径 |r| 的二元熵 S = H₂((1+|r|)/2)。
@@ -122,7 +122,7 @@ struct GemologyMisuseModelModule: SimModule {
         return SimResult(
             charts: [
                 .bloch(BlochData(
-                    spec: charts[0].blochSpec!,
+                    spec: charts.requireBloch(0),
                     state: Point3D(x: rSep.rx, y: rSep.ry, z: rSep.rz),
                     stateLabel: "|ψ(δ)⟩",
                     trajectory: (0..<73).map { i in
@@ -132,7 +132,7 @@ struct GemologyMisuseModelModule: SimModule {
                     },
                     northLabel: "|R⟩", southLabel: "|L⟩")),
                 .lineSeries(LineSeriesData(
-                    spec: charts[1].lineSeriesSpec!,
+                    spec: charts.requireLineSeries(1),
                     series: [
                         .init(name: "S = H₂((1+|r|)/2)",
                               points: Num.strided(rGrid, sCurve, stride: 1)),
@@ -145,7 +145,7 @@ struct GemologyMisuseModelModule: SimModule {
                         PointMarker(x: normSep, y: sSep,
                                     label: String(format: "δ=%.2f → |r|=%.2f", delta, normSep)),
                     ])),
-                .levelDiagram(LevelDiagramData(spec: charts[2].levelDiagramSpec!,
+                .levelDiagram(LevelDiagramData(spec: charts.requireLevelDiagram(2),
                                                levels: levels, transitions: transitions)),
             ],
             summary: [

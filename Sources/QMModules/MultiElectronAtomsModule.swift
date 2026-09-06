@@ -40,12 +40,20 @@ enum MultiElectronAtomsMath {
     ]
 
     /// Slater 屏蔽：同组其它电子 0.35（1s 为 0.30），n−1 层 0.85，n−2 及更深 1.00。
+    /// 组名首字符必须为主量子数（"1s"、"2s2p"…）；显式失败优于静默错物理（W13k N1）。
+    private static func principalN(_ group: String) -> Int {
+        guard let n = group.first?.wholeNumberValue, n >= 1 else {
+            preconditionFailure("壳层组名须以主量子数开头：\(group)")
+        }
+        return n
+    }
+
     static func slaterZeff(_ element: Element) -> Double {
         let config = element.config
-        let nTarget = Int(String(config[element.target].group.prefix(1)))!
+        let nTarget = principalN(config[element.target].group)
         var sigma = 0.0
         for (i, grp) in config.enumerated() {
-            let nGrp = Int(String(grp.group.prefix(1)))!
+            let nGrp = principalN(grp.group)
             if i == element.target {
                 let others = Double(grp.count - 1)
                 sigma += others * (nGrp == 1 ? 0.30 : 0.35)
