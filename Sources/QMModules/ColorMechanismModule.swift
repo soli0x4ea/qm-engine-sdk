@@ -53,14 +53,14 @@ struct ColorVibrationalCouplingModule: SimModule {
             .lineSeries(LineSeriesSpec(
                 title: "d-d 跃迁相对强度 vs 奇宇称振动耦合强度 ξ",
                 xAxis: .init(label: "振动耦合强度 ξ (无量纲，示意)"),
-                yAxis: .init(label: "相对强度 I(ξ)（log）", scale: .log),
+                yAxis: .init(label: "相对强度 I(ξ)"),   // W13d：回线性——I(ξ)∈[0,1] 饱和型，log 下形态与笔记 43 图2 不符
                 seriesNames: ["I(ξ) = ξ²/(ξ²+ξ₀²)"])),
         ]
     }
 
     func compute(_ input: ParamValues, constants: ConstantsSet) async throws -> SimResult {
         let xi0 = input.slider("xi0")
-        let xi = Num.linspace(1e-3, 3.0, count: 600)  // W13(C1)：起点 1e-3 保证 log 轴全正，低 ξ 的 ξ² 幂律段可见
+        let xi = Num.linspace(1e-3, 3.0, count: 600)  // 网格保持 1e-3 起（fixture 对拍口径）；回线性后低 ξ 幂律段仍可见
         let I = xi.map { ColorMechanismMath.relativeIntensity(xi: $0, xi0: xi0) }
         let area = Num.trapezoid(xi, I)
 

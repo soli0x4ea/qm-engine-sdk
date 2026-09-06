@@ -42,12 +42,12 @@ struct BB84ModuleTests {
                              tolerance: 5e-6, "R(Q) = 1 − 2h(Q)")
     }
 
-    @Test("compute 输出结构：300 点主曲线 + 安全区填充（264 点 ≤ 11%）+ 2 参考线 + 摘要")
+    @Test("compute 输出结构：300 点主曲线 + 安全区填充（264 点 ≤ 11%）+ 2 参考线 + 摘要 + 协议示意图")
     func computeStructure() async throws {
         let module = BB84Module()
         let result = try await module.compute(
             ParamValues.defaults(for: module.params), constants: try constants())
-        #expect(result.charts.count == 1)
+        #expect(result.charts.count == 2)   // W13d：+协议泳道示意图（笔记 32）
         guard case .lineSeries(let c0) = result.charts[0] else {
             Issue.record("应为 lineSeries"); return
         }
@@ -64,6 +64,14 @@ struct BB84ModuleTests {
         #expect(abs(fill.points.last!.x - 10.976) < 1e-2)
         #expect(result.summary.count == 4)
         #expect(result.theory?.formulas.count == 4)
+        // 协议示意图：4 泳道 + 12 过程标记点（4 Alice + 4 光子 + 4 Bob）+ 3 密钥点 + 箭头
+        guard case .schematic(let s1) = result.charts[1] else {
+            Issue.record("应为 schematic"); return
+        }
+        #expect(s1.bands.count == 4)
+        #expect(s1.markers.count == 15)
+        #expect(s1.markers.filter { !$0.filled }.count == 1, "轮 3 基矢误选 = 空心点")
+        #expect(s1.callouts.count == 9)   // 8 泳道间箭头 + 1 基矢比对标注
     }
 
     @Test("实时档预算：compute 中位 < 16 ms")

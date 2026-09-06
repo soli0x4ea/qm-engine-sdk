@@ -46,6 +46,11 @@ struct BB84Module: SimModule {
                 xAxis: .init(label: "QBER Q (%)"),
                 yAxis: .init(label: "渐近密钥率 R (bit/pulse)"),
                 seriesNames: ["R(Q) = 1 − 2h(Q)（单向）"])),
+            // W13d：对齐笔记 32「BB84 协议示意图」——制备→量子信道→测量→经典后处理四泳道
+            .schematic(SchematicSpec(
+                title: "BB84 协议流程示意（制备 → 量子信道 → 测量 → 筛选/纠错）",
+                xAxis: .init(label: "轮次（示意）"),
+                yAxis: .init(label: "协议阶段（示意）"))),
         ]
     }
 
@@ -77,8 +82,57 @@ struct BB84Module: SimModule {
             areaFills: [AreaFill(name: "安全区（R > 0）", points: safePts, baseline: 0)])
 
         let h11 = BB84Math.binaryEntropy(qOneWay)
+
+        // 图 2：协议泳道示意图（W13d 对齐笔记 32）。
+        // 泳道 y = 4/3/2/1：Alice 制备 → 量子信道 → Bob 测量 → 经典后处理；
+        // 4 轮示例：轮 3 Bob 基矢误选（空心点）→ 筛选时丢弃，其余进入 sifted key。
+        let rounds = [1.0, 2.0, 3.0, 4.0]
+        let aliceBits = ["0｜+", "1｜×", "1｜+", "0｜×"]
+        let bobResults = [("0 ✓", true), ("1 ✓", true), ("1 ✗ 基矢误", false), ("0 ✓", true)]
+        let bobKept = ["0 (留)", "1 (留)", "— (弃)", "0 (留)"]
+
+        var markers: [SchematicMarker] = []
+        for (i, x) in rounds.enumerated() {
+            markers.append(SchematicMarker(label: aliceBits[i], x: x, y: 4, colorIndex: 0))
+            markers.append(SchematicMarker(x: x, y: 3, colorIndex: 1))   // 信道中的单光子
+            markers.append(SchematicMarker(label: bobResults[i].0, x: x, y: 2,
+                                           filled: bobResults[i].1, colorIndex: 2))
+        }
+        // 筛选后的 sifted key（丢弃基矢误选轮次）
+        markers.append(SchematicMarker(label: "密钥 0", x: 1, y: 1, colorIndex: 3))
+        markers.append(SchematicMarker(label: "密钥 1", x: 2, y: 1, colorIndex: 3))
+        markers.append(SchematicMarker(label: "密钥 0", x: 4, y: 1, colorIndex: 3))
+
+        var arrows: [SchematicCallout] = []
+        for x in rounds {
+            arrows.append(SchematicCallout(text: "", anchor: Point(x: x, y: 3.62),
+                                           arrowEnd: Point(x: x, y: 3.38), colorIndex: 1))
+            arrows.append(SchematicCallout(text: "", anchor: Point(x: x, y: 2.62),
+                                           arrowEnd: Point(x: x, y: 2.38), colorIndex: 2))
+        }
+
+        let chart1 = SchematicData(
+            spec: charts[1].schematicSpec!,
+            bands: [
+                SchematicBand(label: "Alice：随机比特 + 制备基矢",
+                              xRange: 0.55...4.45, yRange: 3.72...4.28, colorIndex: 0),
+                SchematicBand(label: "量子信道（单光子偏振态）",
+                              xRange: 0.55...4.45, yRange: 2.72...3.28, colorIndex: 1),
+                SchematicBand(label: "Bob：随机基矢测量",
+                              xRange: 0.55...4.45, yRange: 1.72...2.28, colorIndex: 2),
+                SchematicBand(label: "经典信道：基矢比对 → 纠错 → 保密放大",
+                              xRange: 0.55...4.45, yRange: 0.72...1.28, colorIndex: 3),
+            ],
+            markers: markers,
+            callouts: arrows + [
+                SchematicCallout(
+                    text: "公开比对基矢：保留基矢一致轮（✓），丢弃误选轮（✗）→ 筛选密钥",
+                    anchor: Point(x: 2.5, y: 0.62),
+                    arrowEnd: Point(x: 3.0, y: 0.78), colorIndex: 3),
+            ])
+
         return SimResult(
-            charts: [.lineSeries(chart0)],
+            charts: [.lineSeries(chart0), .schematic(chart1)],
             summary: [
                 .init(id: "threshold", title: "单向安全阈值",
                       value: "Q* = 11.0%",

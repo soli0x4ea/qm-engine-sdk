@@ -132,11 +132,11 @@ struct SchrodingerFDWellModuleTests {
               case .lineSeries(let c1) = result.charts[1] else {
             Issue.record("应为 2 lineSeries"); return
         }
-        #expect(c0.series.count == 4)
+        #expect(c0.series.count == 6)   // W13d：对齐笔记 13 前 6 个本征函数
         #expect(c0.series.allSatisfy { $0.points.count == 800 })
         #expect(c1.series.count == 2 && c1.series[0].points.count == 6)
         #expect(result.summary.count == 4)
-        #expect(result.summary[2].value == "0, 1, 2, 3", "节点计数 = \(result.summary[2].value)")
+        #expect(result.summary[2].value == "0, 1, 2, 3, 4, 5", "节点计数 = \(result.summary[2].value)")
         #expect(result.theory?.formulas.count == 4)
     }
 

@@ -14,8 +14,8 @@ enum SchrodingerFDWellMath {
     static let gridPoints = 800
     /// 参与图表/摘要的本征对个数（脚本取前 6）。
     static let eigenpairs = 6
-    /// 波函数图叠加的本征态个数（脚本作图前 4）。
-    static let plottedStates = 4
+    /// 波函数图叠加的本征态个数（W13d 对齐笔记 13 图：前 6 个本征函数）。
+    static let plottedStates = 6
 
     /// 三对角 FD 哈密顿（行主序稠密存放，只填三对角，其余为 0）。
     /// - Parameters:
@@ -136,7 +136,7 @@ struct SchrodingerFDWellModule: SimModule {
             .map { $0 / eCharge }
         let relErrs = zip(valsEv, analyticEv).map { abs($0 - $1) / $1 }
 
-        // 图 1：前 4 个本征函数（网格归一化 + 1.2(n−1) 叠加偏置，x 用 nm）
+        // 图 1：前 6 个本征函数（网格归一化 + 1.2(n−1) 叠加偏置，x 用 nm；W13d 对齐笔记 13）
         let xNm = (1...n).map { Double($0) * dx * 1.0e9 }
         var psiSeries: [SeriesPoints] = []
         var nodeCounts: [Int] = []
@@ -174,7 +174,7 @@ struct SchrodingerFDWellModule: SimModule {
                 .init(id: "rel", title: "最大相对误差（n≤6）",
                       value: String(format: "%.2e", worstRel),
                       note: "FD 误差 ~ (dx)²，随 N 增大按平方收敛"),
-                .init(id: "nodes", title: "节点数（前 4 态）",
+                .init(id: "nodes", title: "节点数（前 6 态）",
                       value: nodesText,
                       note: "节点定理：第 n 态恰有 n−1 个节点"),
                 .init(id: "grid", title: "网格",
