@@ -116,7 +116,11 @@ struct UncertaintyModuleTests {
         }
         #expect(gaussian.series.count == 2)
         #expect(gaussian.series[0].points.count == 2000)
-        #expect(gaussian.series[1].points.count == 2000)
+        // W13f：动量裁剪到位置窗口 |p/3ħ| ≤ 12σ₀ → |k| ≤ 36σ₀ → |m| ≤ 137（FFT 网格 m·π/12）
+        // 共 275 个格点，按 |k| 升序隔一取一 → 138 点
+        #expect(gaussian.series[1].points.count == 138,
+                "实际 \(gaussian.series[1].points.count)")
+        #expect(gaussian.series[1].points.allSatisfy { abs($0.x) <= 12.0 * Self.sigma0 + 1e-9 })
         #expect(well.series.count == 1)
         #expect(well.series[0].points.count == 500)   // 4000 / 8
         #expect(result.summary.count == 4)

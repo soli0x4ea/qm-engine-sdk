@@ -166,10 +166,17 @@ struct UncertaintyModule: SimModule {
         }
         var pdPeak = 0.0
         for v in pd where v > pdPeak { pdPeak = v }
+        // W13f（少爷反馈）：动量序列裁剪到位置轴窗口 |x| ≤ 12σ₀——
+        // FFT 全域 p/3ħ 达 ±174σ₀，把 ±12σ₀ 的位置高斯压成针尖；
+        // 窗口外密度 ~exp(-(72σ_p)²) ≈ 0，裁剪零信息损失，x 域收窄后形态可读。
+        let momentumWindow = 12.0 * sigma0
         var momentumPts: [Point] = []
         momentumPts.reserveCapacity(2000)
         for (n, i) in order.enumerated() where n % 2 == 0 {
-            momentumPts.append(Point(x: k[i] / 3, y: pd[i] / pdPeak))
+            let px = k[i] / 3
+            if abs(px) <= momentumWindow {
+                momentumPts.append(Point(x: px, y: pd[i] / pdPeak))
+            }
         }
 
         // 势阱基态（脚本归一口径：y = ψ²/ψ_max）
