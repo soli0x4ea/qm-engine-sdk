@@ -128,15 +128,22 @@ struct KramersKronigModule: SimModule {
 
     var charts: [ChartSpec] {
         [
+            // W13（C1）：ε₂ 吸收峰外透明区信息全贴轴 → 拆分并改对数轴；
+            // ε₁ 变号必须线性轴，独立成图。
             .lineSeries(LineSeriesSpec(
-                title: "Kramers–Kronig 反演（Lorentz 振子校验）",
+                title: "ε₂ 吸收谱（对数强度轴）",
                 xAxis: .init(label: "光子能量 ħω (eV)"),
-                yAxis: .init(label: "ε₁, ε₂"),
-                seriesNames: ["ε₂ (输入)", "ε₁ 解析", "ε₁ KK 反演"])),
+                yAxis: .init(label: "ε₂", scale: .log),
+                seriesNames: ["ε₂ (输入)"])),
             .lineSeries(LineSeriesSpec(
-                title: "折射率恢复：n(ω) 与 κ(ω)",
+                title: "Kramers–Kronig 反演校验：ε₁ 解析 vs 反演",
                 xAxis: .init(label: "光子能量 ħω (eV)"),
-                yAxis: .init(label: "n, κ"),
+                yAxis: .init(label: "ε₁"),
+                seriesNames: ["ε₁ 解析", "ε₁ KK 反演"])),
+            .lineSeries(LineSeriesSpec(
+                title: "折射率恢复：n(ω) 与 κ(ω)（对数轴）",
+                xAxis: .init(label: "光子能量 ħω (eV)"),
+                yAxis: .init(label: "n, κ", scale: .log),
                 seriesNames: ["n 解析", "n = KK + ε₂", "κ(ω)"])),
         ]
     }
@@ -186,13 +193,25 @@ struct KramersKronigModule: SimModule {
         let nN = zip(eps1N, eps2).map { KramersKronigMath.refractiveIndex(eps1: $0, eps2: $1).n }
         let kappa = zip(eps1A, eps2).map { KramersKronigMath.refractiveIndex(eps1: $0, eps2: $1).kappa }
 
-        // --- 图 1：ε 曲线三条（1200 点，显示抽稀到 ≤600） ---
+        // --- 图 1：ε₂ 吸收谱（对数轴，透明区 4–5 个量级的尾部可见） ---
         let chart1 = LineSeriesData(
             spec: .init(xAxis: .init(label: "光子能量 ħω (eV)"),
-                        yAxis: .init(label: "ε₁, ε₂"),
-                        seriesNames: ["ε₂ (输入)", "ε₁ 解析", "ε₁ KK 反演"]),
+                        yAxis: .init(label: "ε₂", scale: .log),
+                        seriesNames: ["ε₂ (输入)"]),
             series: [
                 .init(name: "ε₂ (输入)", points: Num.strided(w, eps2, stride: 2)),
+            ],
+            referenceLines: [
+                ReferenceLine(label: String(format: "ω₀ = %.1f eV", w0), axis: .x, value: w0,
+                              style: .subtle),
+            ])
+
+        // --- 图 1b：ε₁ 反演校验（ε₁ 变号 → 线性轴） ---
+        let chart1b = LineSeriesData(
+            spec: .init(xAxis: .init(label: "光子能量 ħω (eV)"),
+                        yAxis: .init(label: "ε₁"),
+                        seriesNames: ["ε₁ 解析", "ε₁ KK 反演"]),
+            series: [
                 .init(name: "ε₁ 解析", points: Num.strided(w, eps1A, stride: 2)),
                 .init(name: "ε₁ KK 反演", points: Num.strided(w, eps1N, stride: 2)),
             ],
@@ -201,15 +220,16 @@ struct KramersKronigModule: SimModule {
                               style: .subtle),
             ])
 
-        // --- 图 2：n/κ 曲线 ---
+        // --- 图 2：n/κ 曲线（对数轴；κ 在透明区为 0 → 显示下限 1e-12） ---
+        let kappaFloor = kappa.map { max($0, 1e-12) }
         let chart2 = LineSeriesData(
             spec: .init(xAxis: .init(label: "光子能量 ħω (eV)"),
-                        yAxis: .init(label: "n, κ"),
+                        yAxis: .init(label: "n, κ", scale: .log),
                         seriesNames: ["n 解析", "n = KK + ε₂", "κ(ω)"]),
             series: [
                 .init(name: "n 解析", points: Num.strided(w, nA, stride: 2)),
                 .init(name: "n = KK + ε₂", points: Num.strided(w, nN, stride: 2)),
-                .init(name: "κ(ω)", points: Num.strided(w, kappa, stride: 2)),
+                .init(name: "κ(ω)", points: Num.strided(w, kappaFloor, stride: 2)),
             ])
 
         // ω = ω₀ 锚点（脚本 [模型 b] ω=5.0 打印）
@@ -218,7 +238,7 @@ struct KramersKronigModule: SimModule {
         }?.offset ?? 0
 
         return SimResult(
-            charts: [.lineSeries(chart1), .lineSeries(chart2)],
+            charts: [.lineSeries(chart1), .lineSeries(chart1b), .lineSeries(chart2)],
             summary: [
                 .init(id: "model", title: "Lorentz 振子参数",
                       value: String(format: "ω₀=%.1f, ω_p=%.1f, γ=%.2f eV", w0, wp, gamma),

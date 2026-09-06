@@ -38,19 +38,22 @@ struct SuperconductivityModule: SimModule {
             .slider(SliderSpec(key: "Tc", title: "临界温度", symbol: "T_c", unit: "K",
                                range: 0.5...100, defaultValue: 9.25,
                                scale: .log, decimalPlaces: 2)),
+            .slider(SliderSpec(key: "a", title: "结区边长", symbol: "a", unit: "µm",
+                               range: 1...50, defaultValue: 10,
+                               decimalPlaces: 1)),
         ]
     }
 
     var charts: [ChartSpec] {
         [
             .lineSeries(LineSeriesSpec(
-                title: "BCS 序参量（能隙）随温度",
-                xAxis: .init(label: "T/T_c"),
+                title: "BCS 序参量（能隙）随绝对温度",
+                xAxis: .init(label: "T (K)", scale: .log),
                 yAxis: .init(label: "Δ(T)/Δ(0)"),
                 seriesNames: ["Δ(T)/Δ(0)"])),
             .lineSeries(LineSeriesSpec(
-                title: "约瑟夫森结临界电流（Fraunhofer）",
-                xAxis: .init(label: "磁通 Φ/Φ₀"),
+                title: "约瑟夫森结临界电流（Fraunhofer，绝对磁通）",
+                xAxis: .init(label: "磁通密度 B (mT)"),
                 yAxis: .init(label: "I_c(Φ)/I_c0"),
                 seriesNames: ["I_c/I_c0"])),
         ]
@@ -58,37 +61,50 @@ struct SuperconductivityModule: SimModule {
 
     func compute(_ input: ParamValues, constants: ConstantsSet) async throws -> SimResult {
         let tc = input.slider("Tc")
+        let aUm = input.slider("a")
         let kB = try constants.value("kB")
         let eV = try constants.value("eV")
 
-        // 与 Python Tr = linspace(0.02, 1.4, 600) 一致
-        let tRatio = Num.linspace(0.02, 1.4, count: 600)
-        let ratio = tRatio.map(SuperconductivityMath.gapRatio)
+        // W13 修正 B1：约化坐标 (T/T_c) 下曲线族恒为普适形状，Tc 扰动视觉 0%——
+        // 改绝对温度 log 域 0.1…100 K（覆盖滑杆全域），能隙闭合点随 Tc 真实平移。
+        let temps = Num.logspace(0.1, 100, count: 600)
+        let ratio = temps.map { SuperconductivityMath.gapRatio($0 / tc) }
 
-        // 与 Python Phi_ratio = linspace(−3, 3, 900) 一致
-        let phi = Num.linspace(-3, 3, count: 900)
-        let ic = phi.map(SuperconductivityMath.fraunhofer)
+        // W13：Fraunhofer 同理改绝对磁通密度 B（结面积 A = a²，Φ = B·A）——
+        // 场周期 Φ₀/A 随结区边长真实伸缩（结越大周期越小）。
+        let phi0 = try constants.value("Phi0")  // 库珀对磁通量子
+        let area = pow(aUm * 1e-6, 2)  // m²
+        let phiRatio = Num.linspace(-3, 3, count: 900)
+        let bGrid = phiRatio.map { $0 * phi0 / area * 1e3 }  // mT
+        let ic = phiRatio.map(SuperconductivityMath.fraunhofer)
 
         let delta0 = 1.76 * kB * tc  // BCS: Δ(0) = 1.76 k_B T_c
         let ratioHalf = SuperconductivityMath.gapRatio(0.5)
+        let periodMT = phi0 / area * 1e3  // 场周期（mT）
 
         let chart0 = LineSeriesData(
-            spec: .init(xAxis: .init(label: "T/T_c"),
+            spec: .init(xAxis: .init(label: "T (K)", scale: .log),
                         yAxis: .init(label: "Δ(T)/Δ(0)"),
                         seriesNames: ["Δ(T)/Δ(0)"]),
             series: [.init(name: "Δ(T)/Δ(0)",
-                           points: Num.strided(tRatio, ratio, stride: 2))],
-            referenceLines: [ReferenceLine(label: "T/T_c = 1", axis: .x, value: 1)])
+                           points: Num.strided(temps, ratio, stride: 2))],
+            referenceLines: [ReferenceLine(label: String(format: "T_c = %.2f K", tc),
+                                           axis: .x, value: tc)],
+            pointMarkers: [
+                PointMarker(x: tc / 2, y: ratioHalf,
+                            label: String(format: "Δ(0.5T_c)/Δ(0) = %.4f", ratioHalf)),
+            ])
 
         let chart1 = LineSeriesData(
-            spec: .init(xAxis: .init(label: "磁通 Φ/Φ₀"),
+            spec: .init(xAxis: .init(label: "磁通密度 B (mT)"),
                         yAxis: .init(label: "I_c(Φ)/I_c0"),
                         seriesNames: ["I_c/I_c0"]),
             series: [.init(name: "I_c/I_c0",
-                           points: Num.strided(phi, ic, stride: 2))],
+                           points: Num.strided(bGrid, ic, stride: 2))],
             referenceLines: [
-                ReferenceLine(label: "首个零点 Φ/Φ₀ = 1", axis: .x, value: 1, style: .subtle),
-                ReferenceLine(label: "−1", axis: .x, value: -1, style: .subtle),
+                ReferenceLine(label: "首个零点 Φ = Φ₀", axis: .x,
+                              value: periodMT, style: .subtle),
+                ReferenceLine(label: "−Φ₀", axis: .x, value: -periodMT, style: .subtle),
             ])
 
         return SimResult(
@@ -100,6 +116,9 @@ struct SuperconductivityModule: SimModule {
                 .init(id: "half", title: "Δ(0.5T_c)/Δ(0)",
                       value: String(format: "%.4f", ratioHalf),
                       note: "低温平台——库珀对束缚坚固"),
+                .init(id: "period", title: "场周期 Φ₀/A",
+                      value: String(format: "%.4f mT", periodMT),
+                      note: String(format: "结区 %.1f×%.1f µm²（a 越大周期越小）", aUm, aUm)),
                 .init(id: "fraun", title: "I_c(0)",
                       value: String(format: "%.4f I_c0", 1.0),
                       note: "Fraunhofer 中心峰；零点在整数 Φ₀"),

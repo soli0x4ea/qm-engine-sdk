@@ -138,7 +138,7 @@ struct BlochSphereModuleTests {
     func computeAndBudget() async throws {
         let cs = try constants()
         let result = try await module.compute(values(), constants: cs)
-        let chart = try #require(chartLineSeries(result, 0))
+        let chart = try #require(chartLineSeries(result, 1))  // W13：曲线图移至 index 1
         #expect(chart.series.count == 2)
         // |α|² = cos²(θ/2) 在 θ=π 处为 0，|β|² 为 1；θ=0 反之
         let s0 = chart.series[0].points

@@ -51,6 +51,28 @@ public struct AreaFill: Sendable, Equatable, Identifiable {
     }
 }
 
+// MARK: - 工作点标记（W13 追加，B2/B3 复用）
+
+/// 曲线上的当前工作点标记（参数对应的态/元素/阈值交点）：
+/// 实心圆点 + 可选标注胶囊，LineSeriesData.pointMarkers 渲染。
+public struct PointMarker: Sendable, Equatable, Identifiable {
+    public let id: String
+    public let x: Double
+    public let y: Double
+    public let label: String?
+    /// 色板序（nil 用强调色）
+    public let colorIndex: Int?
+
+    public init(id: String? = nil, x: Double, y: Double,
+                label: String? = nil, colorIndex: Int? = nil) {
+        self.id = id ?? "marker(\(x),\(y))"
+        self.x = x
+        self.y = y
+        self.label = label
+        self.colorIndex = colorIndex
+    }
+}
+
 public struct LineSeriesData: Sendable, Equatable {
     public let spec: LineSeriesSpec
     /// 与 spec.seriesNames 对齐
@@ -58,14 +80,18 @@ public struct LineSeriesData: Sendable, Equatable {
     public let referenceLines: [ReferenceLine]
     /// 区域填充（W5 追加，默认空——既有模块零改动）
     public let areaFills: [AreaFill]
+    /// 工作点标记（W13 追加，默认空——普适曲线族上的当前态/交点，B2/B3）
+    public let pointMarkers: [PointMarker]
 
     public init(spec: LineSeriesSpec, series: [SeriesPoints],
                 referenceLines: [ReferenceLine] = [],
-                areaFills: [AreaFill] = []) {
+                areaFills: [AreaFill] = [],
+                pointMarkers: [PointMarker] = []) {
         self.spec = spec
         self.series = series
         self.referenceLines = referenceLines
         self.areaFills = areaFills
+        self.pointMarkers = pointMarkers
     }
 }
 
@@ -346,6 +372,63 @@ public struct FrameStackData: Sendable, Equatable {
     }
 }
 
+// MARK: - Bloch 球数据（W13 追加）
+
+/// ⑩ Bloch 球（W13：Canvas 伪 3D 线框投影——经纬网格 + 态矢量/对跖点/轨迹；
+/// matplotlib 3D 版对应；SceneKit 真 3D 属后续升级，契约不变）。
+public struct BlochSpec: Sendable, Equatable {
+    public let title: String?
+
+    public init(title: String? = nil) {
+        self.title = title
+    }
+}
+
+/// 三维点（Bloch 矢量 / 轨迹采样）。
+public struct Point3D: Sendable, Equatable {
+    public let x: Double
+    public let y: Double
+    public let z: Double
+
+    public init(x: Double, y: Double, z: Double) {
+        self.x = x
+        self.y = y
+        self.z = z
+    }
+}
+
+/// Bloch 球数据：当前态矢（单位球 |r|=1，混态允许 |r|<1）、对跖点、可选轨迹。
+public struct BlochData: Sendable, Equatable {
+    public let spec: BlochSpec
+    /// 当前态矢量（Bloch 球坐标，r = Tr(ρσ)）
+    public let state: Point3D
+    /// 态矢标注（如 "|ψ⟩"）
+    public let stateLabel: String?
+    /// 对跖点（正交补态，可选）
+    public let antipode: Point3D?
+    /// 对跖点标注（如 "|ψ⊥⟩"）
+    public let antipodeLabel: String?
+    /// 态矢轨迹（可选，如演化路径）
+    public let trajectory: [Point3D]
+    /// 北/南极基矢标注（如 "|0⟩"/"|1⟩"）
+    public let northLabel: String
+    public let southLabel: String
+
+    public init(spec: BlochSpec, state: Point3D, stateLabel: String? = nil,
+                antipode: Point3D? = nil, antipodeLabel: String? = nil,
+                trajectory: [Point3D] = [],
+                northLabel: String = "|0⟩", southLabel: String = "|1⟩") {
+        self.spec = spec
+        self.state = state
+        self.stateLabel = stateLabel
+        self.antipode = antipode
+        self.antipodeLabel = antipodeLabel
+        self.trajectory = trajectory
+        self.northLabel = northLabel
+        self.southLabel = southLabel
+    }
+}
+
 /// 图表数据四类封装——与模块 charts 声明数组按序对应。
 public enum ChartData: Sendable, Equatable {
     case lineSeries(LineSeriesData)
@@ -357,6 +440,7 @@ public enum ChartData: Sendable, Equatable {
     case schematic(SchematicData)   // W6 追加（契约仅追加）
     case contour(ContourData)   // W6 追加（契约仅追加）
     case frameStack(FrameStackData)   // W9 追加（契约仅追加）
+    case bloch(BlochData)   // W13 追加（契约仅追加）
 
     public var chartTitle: String? {
         switch self {
@@ -369,6 +453,7 @@ public enum ChartData: Sendable, Equatable {
         case .schematic(let d): return d.spec.title
         case .contour(let d): return d.spec.title
         case .frameStack(let d): return d.spec.title
+        case .bloch(let d): return d.spec.title
         }
     }
 }

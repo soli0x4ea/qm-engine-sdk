@@ -10,6 +10,13 @@ enum Num {
         return (0..<count).map { from + (to - from) * Double($0) / Double(count - 1) }
     }
 
+    /// np.logspace：十进制对数均匀 count 点（跨多个量级的物理量网格）。
+    static func logspace(_ from: Double, _ to: Double, count: Int) -> [Double] {
+        precondition(count >= 2, "logspace 需要 count >= 2")
+        let logs = linspace(log10(from), log10(to), count: count)
+        return logs.map { pow(10, $0) }
+    }
+
     /// 梯形积分（非均匀网格通用，对应量子谐振子脚本的 trapz）。
     static func trapezoid(_ xs: [Double], _ ys: [Double]) -> Double {
         guard xs.count == ys.count, xs.count > 1 else { return 0 }
@@ -76,6 +83,11 @@ extension ChartSpec {
 
     var levelDiagramSpec: LevelDiagramSpec? {
         if case .levelDiagram(let s) = self { return s }
+        return nil
+    }
+
+    var blochSpec: BlochSpec? {
+        if case .bloch(let s) = self { return s }
         return nil
     }
 }

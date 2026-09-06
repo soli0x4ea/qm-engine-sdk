@@ -35,9 +35,11 @@ enum SternGerlachMath {
         return exp(-t * t)
     }
 
-    /// 探测屏网格：z = linspace(−3dz, 3dz, 600)。
-    static func detectorGrid(dz: Double) -> [Double] {
-        Num.linspace(-3 * dz, 3 * dz, count: 600)
+    /// 探测屏网格（W13 修正 B1）：固定物理范围 z = linspace(−5 mm, +5 mm, 600)——
+    /// 原实现 linspace(−3dz, 3dz) 使 x 轴随偏移同步缩放，高斯形状在 (z/dz) 空间
+    /// 恒为普适函数，T/gradB/L/D 扰动视觉 0%。固定域后两束分离（毫米数）真实可见。
+    static func detectorGrid() -> [Double] {
+        Num.linspace(-5e-3, 5e-3, count: 600)
     }
 }
 
@@ -93,8 +95,8 @@ struct SternGerlachModule: SimModule {
         let (a, d1, d2, dz) = SternGerlachMath.deflection(
             v: v, muB: muB, gradB: gradB, mass: mAg, magnetLength: Lm, drift: D)
 
-        // 探测屏曲线（脚本原样 600 网格；显示抽稀 stride 3 → 200 点）
-        let grid = SternGerlachMath.detectorGrid(dz: dz)
+        // 探测屏曲线（固定物理域 600 网格；显示抽稀 stride 3 → 200 点）
+        let grid = SternGerlachMath.detectorGrid()
         var upPts = [Point](), dnPts = [Point](), totPts = [Point]()
         upPts.reserveCapacity(200); dnPts.reserveCapacity(200); totPts.reserveCapacity(200)
         for i in grid.indices where i % 3 == 0 {
@@ -116,6 +118,12 @@ struct SternGerlachModule: SimModule {
                         .init(name: "m_s = +1/2", points: upPts),
                         .init(name: "m_s = −1/2", points: dnPts, colorIndex: 1),
                         .init(name: "总强度", points: totPts, colorIndex: 2),
+                    ],
+                    referenceLines: [
+                        ReferenceLine(label: String(format: "+dz = %.3f mm", dz * 1e3),
+                                      axis: .x, value: dz * 1e3, style: .subtle),
+                        ReferenceLine(label: String(format: "−dz = −%.3f mm", dz * 1e3),
+                                      axis: .x, value: -dz * 1e3, style: .subtle),
                     ])),
             ],
             summary: [

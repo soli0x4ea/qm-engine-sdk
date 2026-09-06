@@ -71,11 +71,11 @@ struct PhotonStatisticsModule: SimModule {
             .bars(BarSpec(
                 title: "相干态 P(n)（泊松）",
                 xAxis: .init(label: "光子数 n"),
-                yAxis: .init(label: "概率 P(n)"))),
+                yAxis: .init(label: "概率 P(n)（log）", scale: .log))),
             .bars(BarSpec(
                 title: "热态 P(n)（玻色-爱因斯坦）",
                 xAxis: .init(label: "光子数 n"),
-                yAxis: .init(label: "概率 P(n)"))),
+                yAxis: .init(label: "概率 P(n)（log）", scale: .log))),
         ]
     }
 

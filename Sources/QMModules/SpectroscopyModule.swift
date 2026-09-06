@@ -72,10 +72,10 @@ struct FluorescenceLifetimeModule: SimModule {
     var charts: [ChartSpec] {
         [
             .dualAxisLineSeries(DualAxisLineSeriesSpec(
-                title: "爱因斯坦 A 系数与寿命随发射波长变化",
+                title: "爱因斯坦 A 系数与寿命随发射波长变化（对数轴）",
                 xAxis: .init(label: "发射波长 λ (nm)"),
-                primaryAxis: .init(label: "自发辐射速率 A (s⁻¹)"),
-                secondaryAxis: .init(label: "寿命 τ (ns)"),
+                primaryAxis: .init(label: "自发辐射速率 A (s⁻¹，log)", scale: .log),
+                secondaryAxis: .init(label: "寿命 τ (ns，log)", scale: .log),
                 primaryNames: ["A(λ)"], secondaryNames: ["τ(λ)"])),
             .lineSeries(LineSeriesSpec(
                 title: "荧光与磷光：指数衰减（双指数分量）",
@@ -214,9 +214,9 @@ struct RamanSpectrumModule: SimModule {
     var charts: [ChartSpec] {
         [
             .lineSeries(LineSeriesSpec(
-                title: "拉曼谱：Stokes 与 anti-Stokes 带（785 nm 激发）",
+                title: "拉曼谱：Stokes 与 anti-Stokes 带（785 nm 激发，对数强度轴）",
                 xAxis: .init(label: "散射光波数 / cm⁻¹"),
-                yAxis: .init(label: "相对强度 (a.u.)"),
+                yAxis: .init(label: "相对强度 (a.u.，log)", scale: .log),
                 seriesNames: ["Raman (Stokes + anti-Stokes)"])),
         ]
     }

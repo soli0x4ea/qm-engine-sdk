@@ -67,6 +67,7 @@ struct GemologyMisuseModelModule: SimModule {
 
     var charts: [ChartSpec] {
         [
+            .bloch(BlochSpec(title: "Bloch 球对照：双折射纯态（赤道面随 δ 转动）")),
             .lineSeries(LineSeriesSpec(
                 title: "von Neumann 熵 S 随 Bloch 半径 |r|（bit）",
                 xAxis: .init(label: "Bloch 半径 |r|（0 = 球心最大混态，1 = 球面纯态）"),
@@ -120,8 +121,18 @@ struct GemologyMisuseModelModule: SimModule {
 
         return SimResult(
             charts: [
+                .bloch(BlochData(
+                    spec: charts[0].blochSpec!,
+                    state: Point3D(x: rSep.rx, y: rSep.ry, z: rSep.rz),
+                    stateLabel: "|ψ(δ)⟩",
+                    trajectory: (0..<73).map { i in
+                        let d = Double(i) / 72 * 2 * .pi
+                        let r = GemologyMisuseMath.separableBloch(delta: d)
+                        return Point3D(x: r.rx, y: r.ry, z: r.rz)
+                    },
+                    northLabel: "|R⟩", southLabel: "|L⟩")),
                 .lineSeries(LineSeriesData(
-                    spec: charts[0].lineSeriesSpec!,
+                    spec: charts[1].lineSeriesSpec!,
                     series: [
                         .init(name: "S = H₂((1+|r|)/2)",
                               points: Num.strided(rGrid, sCurve, stride: 1)),
@@ -129,8 +140,12 @@ struct GemologyMisuseModelModule: SimModule {
                     referenceLines: [
                         ReferenceLine(label: "最大混态 |r|=0 → S=1", axis: .x, value: 0, style: .subtle),
                         ReferenceLine(label: "纯态 |r|=1 → S=0", axis: .x, value: 1, style: .subtle),
+                    ],
+                    pointMarkers: [
+                        PointMarker(x: normSep, y: sSep,
+                                    label: String(format: "δ=%.2f → |r|=%.2f", delta, normSep)),
                     ])),
-                .levelDiagram(LevelDiagramData(spec: charts[1].levelDiagramSpec!,
+                .levelDiagram(LevelDiagramData(spec: charts[2].levelDiagramSpec!,
                                                levels: levels, transitions: transitions)),
             ],
             summary: [

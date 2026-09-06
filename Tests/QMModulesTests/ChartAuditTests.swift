@@ -29,6 +29,7 @@ struct ChartAuditTests {
         case .schematic: return "schematic"
         case .contour: return "contour"
         case .frameStack: return "frameStack"
+        case .bloch: return "bloch"
         }
     }
 
@@ -45,6 +46,7 @@ struct ChartAuditTests {
         case .schematic: return []
         case .contour(let d): return d.values.flatMap { $0 }
         case .frameStack(let d): return d.frames.flatMap { $0.values.flatMap { $0 } }
+        case .bloch(let d): return [d.state.x, d.state.y, d.state.z]
         }
     }
 

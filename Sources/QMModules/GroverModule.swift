@@ -82,7 +82,7 @@ struct GroverModule: SimModule {
             .lineSeries(LineSeriesSpec(
                 title: "Grover 成功概率 P(n) vs 迭代次数",
                 xAxis: .init(label: "迭代次数 n"),
-                yAxis: .init(label: "成功概率 P(n)"),
+                yAxis: .init(label: "成功概率 P(n)（log）", scale: .log),
                 seriesNames: ["P(n) = sin²((2n+1)θ)", "峰值 n*"])),
         ]
     }

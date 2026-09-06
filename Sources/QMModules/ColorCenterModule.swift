@@ -184,7 +184,7 @@ struct ElectronPhononAbsorptionModule: SimModule {
             .lineSeries(LineSeriesSpec(
                 title: "电子-声子吸收/发射谱（T=0，ZPL + 泊松声子边带）",
                 xAxis: .init(label: "光子能量 E (eV)"),
-                yAxis: .init(label: "吸收/发射线型 (a.u.)"),
+                yAxis: .init(label: "吸收/发射线型 (a.u.，log)", scale: .log),
                 seriesNames: ["Absorption (T=0)", "Emission (T=0)"])),
         ]
     }

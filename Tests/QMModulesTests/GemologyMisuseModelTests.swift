@@ -116,10 +116,10 @@ struct GemologyMisuseModelTests {
     func computeAndBudget() async throws {
         let cs = try constants()
         let result = try await module.compute(values(), constants: cs)
-        #expect(result.charts.count == 2)
+        #expect(result.charts.count == 3)  // W13：+Bloch 球图种
         // 能级图：5 能级升序、4 跃迁
-        guard case .levelDiagram(let ld) = result.charts[1] else {
-            Issue.record("第 2 图应为能级图")
+        guard case .levelDiagram(let ld) = result.charts[2] else {
+            Issue.record("第 3 图应为能级图")
             return
         }
         #expect(ld.levels.count == 5)
@@ -127,7 +127,7 @@ struct GemologyMisuseModelTests {
         #expect(ld.transitions.count == 4, "R1/R2 发射 + 4T2/4T1 吸收")
         #expect(ld.levels[0].energy == 0 && ld.levels[3].energy == 18000)
         // S(|r|) 曲线端点：S(0)=1、S(1)=0
-        let chart = try #require(chartLineSeries(result, 0))
+        let chart = try #require(chartLineSeries(result, 1))  // W13：曲线图移至 index 1
         let pts = chart.series[0].points
         #expect(abs(pts.first!.y - 1) < 1e-12)
         #expect(abs(pts.last!.y) < 1e-12)

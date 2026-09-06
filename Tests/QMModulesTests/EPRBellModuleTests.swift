@@ -106,10 +106,11 @@ struct EPRBellModuleTests {
         let module = EPRBellModule()
         let result = try await module.compute(
             ParamValues.defaults(for: module.params), constants: try constants())
-        #expect(result.charts.count == 3)
+        #expect(result.charts.count == 4)  // W13：+Tsirelson 采样分布散点
         guard case .lineSeries(let c0) = result.charts[0],
               case .lineSeries(let c1) = result.charts[1],
-              case .scatter(let c2) = result.charts[2] else {
+              case .scatter(let c2) = result.charts[2],
+      case .scatter(let c3) = result.charts[3] else {
             Issue.record("应为 2 lineSeries + 1 scatter"); return
         }
         // 单态 1000 点 stride 2 → 500；光子 2000 点 stride 4 → 500
@@ -124,6 +125,7 @@ struct EPRBellModuleTests {
         #expect(expS == [2.697, 2.25, 2.42])
         #expect(c2.referenceLines.count == 2)
         #expect(result.summary.count == 7)
+        #expect(c3.series.count == 1)  // W13：采样散点单系列
         #expect(result.theory?.formulas.count == 4)
     }
 

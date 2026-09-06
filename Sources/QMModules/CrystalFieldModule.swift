@@ -88,7 +88,13 @@ struct CrystalFieldModelModule: SimModule {
                         .init(name: "Low-spin  t2g⁵",
                               points: Num.strided(delta, eLS, stride: 1), colorIndex: 1),
                     ],
-                    referenceLines: refLines)),
+                    referenceLines: refLines,
+                    // W13（B3）：交叉工作点 (P, 0) 大圆点标注
+                    pointMarkers: [
+                        PointMarker(x: cross, y: 0,
+                                    label: String(format: "Δ_o = P = %.0f", cross),
+                                    colorIndex: 1),
+                    ])),
             ],
             summary: [
                 .init(id: "cross", title: "自旋交叉点 Δ_o = P",
@@ -146,6 +152,7 @@ struct CrystalFieldTanabeSuganoModule: SimModule {
     }
 
     func compute(_ input: ParamValues, constants: ConstantsSet) async throws -> SimResult {
+        let xSel = input.slider("xB")  // W13（B3）：当前工作点联动
         let xMax = 40.0
         let xB = Num.linspace(0.0, xMax, count: 600)
         var t1f: [Double] = [], t2g: [Double] = [], a2g: [Double] = [], t1p: [Double] = []
@@ -156,6 +163,7 @@ struct CrystalFieldTanabeSuganoModule: SimModule {
 
         // Δ_o/B = 25 处的已知 TS 结构参考值（脚本自检：T2g≈23, A2g≈48, T1P≈36）
         let ref = CrystalFieldMath.tanabeSuganoLevels(x: 25.0)
+        let sel = CrystalFieldMath.tanabeSuganoLevels(x: xSel)
 
         return SimResult(
             charts: [
@@ -168,7 +176,17 @@ struct CrystalFieldTanabeSuganoModule: SimModule {
                         .init(name: "^3T1g(P)", points: Num.strided(xB, t1p, stride: 1), colorIndex: 3),
                     ],
                     referenceLines: [
+                        ReferenceLine(label: String(format: "Δ_o/B = %.1f", xSel),
+                                      axis: .x, value: xSel, style: .threshold),
                         ReferenceLine(label: "Δ_o/B = 25（对照点）", axis: .x, value: 25.0, style: .subtle),
+                    ],
+                    pointMarkers: [
+                        PointMarker(x: xSel, y: sel.t1f,
+                                    label: String(format: "E_g/B = %.2f", sel.t1f),
+                                    colorIndex: 0),
+                        PointMarker(x: xSel, y: sel.t1p,
+                                    label: String(format: "E_P/B = %.2f", sel.t1p),
+                                    colorIndex: 3),
                     ])),
             ],
             summary: [

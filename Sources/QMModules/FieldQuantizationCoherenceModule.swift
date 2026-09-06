@@ -112,10 +112,13 @@ struct SecondOrderCoherenceModule: SimModule {
         let g2Th = SecondOrderCoherenceMath.g2Thermal(mu: mu)
         let g2Fock1 = SecondOrderCoherenceMath.g2Fock(n: 1)
 
-        // 图 2：压缩真空 Wigner（320×320；窗口随 r 自适应保 3σ 覆盖 + 等比纵横）
+        // 图 2：压缩真空 Wigner（320×320）。W13 修正 B1：原窗口随 r 自适应保 3σ 覆盖，
+        // 观察窗与椭圆同步缩放 → 屏上形状恒定（r 扰动视觉 0%）。
+        // 改固定窗口（全参数域覆盖）：x 取 r=0 的 3σ（x 方向最大），p 取 r=2 的 3σ
+        // （p 方向最大）——拖动 r 时椭圆真实地压扁/拉长。
         let nGrid = 320
-        let xMax = 3.0 * exp(-r)
-        let pMax = 3.0 * exp(r)
+        let xMax = 3.0 / 2.0.squareRoot() * 1.05          // 3σ_x(r=0) = 3/√2
+        let pMax = 3.0 * exp(2.0) / 2.0.squareRoot() * 1.05  // 3σ_p(r=2)
         let xs = Num.linspace(-xMax, xMax, count: nGrid)
         let ps = Num.linspace(-pMax, pMax, count: nGrid)
         var w: [[Double]] = []

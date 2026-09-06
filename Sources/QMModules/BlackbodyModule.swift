@@ -74,9 +74,9 @@ struct BlackbodyModule: SimModule {
 
     var charts: [ChartSpec] {
         [.lineSeries(LineSeriesSpec(
-            title: "黑体谱 u_λ(λ, T)：三律对比",
+            title: "黑体谱 u_λ(λ, T)：三律对比（对数强度轴）",
             xAxis: .init(label: "λ (nm)"),
-            yAxis: .init(label: "u_λ (J·m⁻⁴·nm⁻¹)"),
+            yAxis: .init(label: "u_λ (J·m⁻⁴·nm⁻¹)", scale: .log),
             seriesNames: ["普朗克", "维恩近似", "瑞利-金斯"]))]
     }
 
@@ -120,7 +120,7 @@ struct BlackbodyModule: SimModule {
 
         let lineSpec = LineSeriesSpec(
             xAxis: .init(label: "λ (nm)"),
-            yAxis: .init(label: "u_λ (J·m⁻⁴·nm⁻¹)"),
+            yAxis: .init(label: "u_λ (J·m⁻⁴·nm⁻¹)", scale: .log),
             seriesNames: ["普朗克", "维恩近似", "瑞利-金斯"])
 
         return SimResult(

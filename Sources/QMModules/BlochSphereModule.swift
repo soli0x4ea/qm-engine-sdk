@@ -88,6 +88,7 @@ struct BlochSphereModule: SimModule {
 
     var charts: [ChartSpec] {
         [
+            .bloch(BlochSpec(title: "Bloch 球：当前态矢 |ψ⟩ 与对跖点 |ψ⊥⟩（随 θ/φ 实时转动）")),
             .lineSeries(LineSeriesSpec(
                 title: "纯态族：|α|² 与 |β|² 随极角 θ（φ 固定）",
                 xAxis: .init(label: "极角 θ (rad)"),
@@ -123,8 +124,15 @@ struct BlochSphereModule: SimModule {
 
         return SimResult(
             charts: [
+                .bloch(BlochData(
+                    spec: charts[0].blochSpec!,
+                    state: Point3D(x: rFromParam.rx, y: rFromParam.ry, z: rFromParam.rz),
+                    stateLabel: "|ψ⟩",
+                    antipode: Point3D(x: rAnti.rx, y: rAnti.ry, z: rAnti.rz),
+                    antipodeLabel: "|ψ⊥⟩",
+                    northLabel: "|0⟩", southLabel: "|1⟩")),
                 .lineSeries(LineSeriesData(
-                    spec: charts[0].lineSeriesSpec!,
+                    spec: charts[1].lineSeriesSpec!,
                     series: [
                         .init(name: "|α|² = cos²(θ/2)",
                               points: Num.strided(thGrid, p0, stride: 1)),
@@ -133,6 +141,13 @@ struct BlochSphereModule: SimModule {
                     ],
                     referenceLines: [
                         ReferenceLine(label: "θ = \(fmt(theta))", axis: .x, value: theta, style: .threshold),
+                    ],
+                    pointMarkers: [
+                        PointMarker(
+                            x: theta,
+                            y: pow(cos(theta / 2), 2),
+                            label: String(format: "θ=%.3f", theta),
+                            colorIndex: 0),
                     ])),
             ],
             summary: [

@@ -62,6 +62,9 @@ struct PairProductionModule: SimModule {
             .slider(SliderSpec(key: "A", title: "靶核质量数", symbol: "A", unit: "",
                                range: 1...250, defaultValue: 1,
                                step: 1, decimalPlaces: 0)),
+            .slider(SliderSpec(key: "Eg", title: "入射光子能量", symbol: "E_γ", unit: "MeV",
+                               range: 0...1.6, defaultValue: 1.2,
+                               decimalPlaces: 3)),
         ]
     }
 
@@ -76,6 +79,7 @@ struct PairProductionModule: SimModule {
 
     func compute(_ input: ParamValues, constants: ConstantsSet) async throws -> SimResult {
         let A = input.slider("A")
+        let eGamma = input.slider("Eg")
         let mP = try constants.value("m_p")
         let eRest = try DiracSeaMath.restEnergy(constants: constants)
         let eTh = try DiracSeaMath.pairThreshold(constants: constants)
@@ -83,7 +87,11 @@ struct PairProductionModule: SimModule {
             constants: constants, nucleusMass: A * mP)
         let recoil = eThRecoil - eTh
 
-        let yMax = 1.25
+        // W13（B4）：动态元素——入射光子标记随 E_γ 滑杆上下移动，
+        // 跨越阈值线即「亚阈值 / 可产对」判定可视化。
+        let feasible = eGamma >= eThRecoil
+        let verdict = feasible ? "E_γ ≥ 含反冲阈 → 对产生可行"
+                               : "E_γ < 含反冲阈 → 亚阈值（真空中无自由对产生）"
 
         return SimResult(
             charts: [
@@ -97,6 +105,9 @@ struct PairProductionModule: SimModule {
                     markers: [
                         .init(label: "m_e c²（单轻子静能）", x: 0, y: eRest,
                               filled: true, colorIndex: 2),
+                        // 入射光子（随 E_γ 滑杆移动的动态标记）
+                        .init(label: String(format: "入射 γ：E_γ = %.3f MeV", eGamma),
+                              x: -0.9, y: eGamma, filled: true, colorIndex: 3),
                     ],
                     callouts: [
                         .init(text: "2 m_e c² = \(String(format: "%.4f", eTh)) MeV（阈值）",
@@ -105,8 +116,9 @@ struct PairProductionModule: SimModule {
                         .init(text: "含反冲阈 \(String(format: "%.6f", eThRecoil)) MeV\n（A = \(Int(A))，修正 +\(String(format: "%.3e", recoil)) MeV）",
                               anchor: Point(x: 0.3, y: eThRecoil),
                               arrowEnd: Point(x: 0.05, y: eThRecoil), colorIndex: 1),
-                        .init(text: "阈值之上：γ + Z → e⁺ + e⁻ + Z",
-                              anchor: Point(x: 0, y: yMax - 0.08), colorIndex: 3),
+                        .init(text: verdict,
+                              anchor: Point(x: 0, y: eGamma + 0.12),
+                              arrowEnd: Point(x: -0.88, y: eGamma), colorIndex: 3),
                     ],
                     referenceLines: [
                         .init(label: "E = 0（静止）", axis: .y, value: 0, style: .subtle),
@@ -122,9 +134,9 @@ struct PairProductionModule: SimModule {
                 .init(id: "recoil", title: "反冲修正 E_γ,min − 2mc²",
                       value: String(format: "%.6e MeV", recoil),
                       note: "2mc²·(m_e/M_N) > 0：重核靶修正趋零"),
-                .init(id: "law", title: "守恒律判定",
-                      value: eThRecoil > eTh ? "反冲抬高阈值" : "—",
-                      note: "动量守恒要求末态核带走反冲动量"),
+                .init(id: "verdict", title: "当前 E_γ 判定",
+                      value: feasible ? "可行（越阈）" : "不可行（亚阈值）",
+                      note: String(format: "E_γ = %.3f MeV vs 含反冲阈 %.6f MeV", eGamma, eThRecoil)),
             ],
             theory: TheoryCard(
                 title: "对产生阈值（笔记 39 第六节 a）",

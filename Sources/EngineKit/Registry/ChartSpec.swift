@@ -231,4 +231,5 @@ public enum ChartSpec: Sendable, Equatable {
     case schematic(SchematicSpec)   // W6 追加（契约仅追加）
     case contour(ContourSpec)   // W6 追加（契约仅追加）
     case frameStack(FrameStackSpec)   // W9 追加（契约仅追加）
+    case bloch(BlochSpec)   // W13 追加（契约仅追加）
 }

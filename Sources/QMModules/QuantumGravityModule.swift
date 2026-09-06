@@ -57,8 +57,8 @@ struct HawkingTemperatureModule: SimModule {
         [
             .lineSeries(LineSeriesSpec(
                 title: "霍金温度随黑洞质量变化（log-log）",
-                xAxis: .init(label: "黑洞质量 M (kg)"),
-                yAxis: .init(label: "霍金温度 T_H (K)"),
+                xAxis: .init(label: "黑洞质量 M (kg)", scale: .log),
+                yAxis: .init(label: "霍金温度 T_H (K)", scale: .log),
                 seriesNames: ["T_H ∝ M^{-1}"])),
         ]
     }
@@ -151,8 +151,8 @@ struct BlackHoleEntropyModule: SimModule {
         [
             .lineSeries(LineSeriesSpec(
                 title: "黑洞熵随质量变化（log-log）",
-                xAxis: .init(label: "黑洞质量 M (kg)"),
-                yAxis: .init(label: "Bekenstein-Hawking 熵 S_BH / k_B"),
+                xAxis: .init(label: "黑洞质量 M (kg)", scale: .log),
+                yAxis: .init(label: "Bekenstein-Hawking 熵 S_BH / k_B", scale: .log),
                 seriesNames: [
                     "S_BH/k_B = A/(4 l_P^2) ∝ M^2",
                     "Planck units: S_BH = 4π (M/m_P)^2",

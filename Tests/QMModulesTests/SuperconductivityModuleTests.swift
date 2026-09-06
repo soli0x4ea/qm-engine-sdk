@@ -66,7 +66,7 @@ struct SuperconductivityModuleTests {
         #expect(c1.series[0].points.count == 450)   // 900 / 2
         #expect(c0.referenceLines.count == 1)
         #expect(c1.referenceLines.count == 2)
-        #expect(result.summary.count == 3)
+        #expect(result.summary.count == 4)  // W13：+场周期 Φ₀/A
         #expect(result.theory?.formulas.count == 4)
     }
 

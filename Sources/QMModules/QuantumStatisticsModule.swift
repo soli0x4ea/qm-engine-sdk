@@ -56,7 +56,7 @@ struct QuantumStatisticsModule: SimModule {
         [
             .lineSeries(LineSeriesSpec(
                 title: "BEC 凝聚分数随温度",
-                xAxis: .init(label: "T/T_c"),
+                xAxis: .init(label: "T (nK)", scale: .log),
                 yAxis: .init(label: "凝聚分数 N₀/N"),
                 seriesNames: ["N₀/N"])),
             .lineSeries(LineSeriesSpec(
@@ -69,6 +69,7 @@ struct QuantumStatisticsModule: SimModule {
 
     func compute(_ input: ParamValues, constants: ConstantsSet) async throws -> SimResult {
         let nRb = input.slider("n_rb")
+        let n_e = input.slider("n_e")
         let hbar = try constants.value("hbar")
         let kB = try constants.value("kB")
         let me = try constants.value("m_e")
@@ -78,8 +79,11 @@ struct QuantumStatisticsModule: SimModule {
         // ---- 段 1：BEC（Rb-87，m = 86.909 u）----
         let mRb = 86.909 * amu
         let tc = QuantumStatisticsMath.becTc(n: nRb, m: mRb, hbar: hbar, kB: kB)
-        let tRatio = Num.linspace(0, 1.3, count: 400)
-        let frac = tRatio.map(QuantumStatisticsMath.condensateFraction)
+        // W13 修正 B2：约化坐标 (T/T_c) 下曲线为普适函数，n_rb 扰动视觉 0%——
+        // 改绝对温度 log 域（1 nK … 10 µK），能隙闭合点随 T_c 真实平移。
+        let tGridNk = Num.logspace(1, 1e4, count: 400)  // nK（1 nK … 10 µK；注意本工具参数为线性端点）
+        let frac = tGridNk.map { QuantumStatisticsMath.condensateFraction($0 / (tc * 1e9)) }
+        let tcNk = tc * 1e9
 
         // ---- 段 2：费米简并压（n = logspace(27, 36, 400)）----
         let lnN = Num.linspace(27, 36, count: 400)
@@ -93,17 +97,25 @@ struct QuantumStatisticsModule: SimModule {
         let nCu = 8.49e28
         let efCu = QuantumStatisticsMath.fermiEnergy(nCu, hbar: hbar, me: me)
         let p0Cu = QuantumStatisticsMath.degeneracyPressure(nCu, eF: efCu)
+        // W13（B2）：当前 n_e 工作点（简并压曲线上的滑杆联动标记）
+        let ef_e = QuantumStatisticsMath.fermiEnergy(n_e, hbar: hbar, me: me)
+        let p0_e = QuantumStatisticsMath.degeneracyPressure(n_e, eF: ef_e)
         let nWd = 1e9 / (2 * amu)
         let efWd = QuantumStatisticsMath.fermiEnergy(nWd, hbar: hbar, me: me)
         let p0Wd = QuantumStatisticsMath.degeneracyPressure(nWd, eF: efWd)
 
         let chart0 = LineSeriesData(
-            spec: .init(xAxis: .init(label: "T/T_c"),
+            spec: .init(xAxis: .init(label: "T (nK)", scale: .log),
                         yAxis: .init(label: "凝聚分数 N₀/N"),
                         seriesNames: ["N₀/N"]),
             series: [.init(name: "N₀/N",
-                           points: zip(tRatio, frac).map { Point(x: $0, y: $1) })],
-            referenceLines: [ReferenceLine(label: "T/T_c = 1", axis: .x, value: 1)])
+                           points: zip(tGridNk, frac).map { Point(x: $0, y: $1) })],
+            referenceLines: [ReferenceLine(label: String(format: "T_c = %.0f nK", tcNk),
+                                           axis: .x, value: tcNk)],
+            pointMarkers: [
+                PointMarker(x: tcNk / 2, y: QuantumStatisticsMath.condensateFraction(0.5),
+                            label: String(format: "T_c/2 = %.0f nK", tcNk / 2)),
+            ])
 
         let chart1 = LineSeriesData(
             spec: .init(xAxis: .init(label: "电子密度 n (m⁻³)", scale: .log),
@@ -115,6 +127,10 @@ struct QuantumStatisticsModule: SimModule {
                 ReferenceLine(id: "cu", label: "铜", axis: .x, value: nCu, style: .subtle),
                 ReferenceLine(id: "wd", label: "白矮星（非相对论）",
                               axis: .x, value: nWd, style: .subtle),
+            ],
+            pointMarkers: [
+                PointMarker(x: n_e, y: p0_e,
+                            label: String(format: "n_e = %.2e", n_e)),
             ])
 
         return SimResult(

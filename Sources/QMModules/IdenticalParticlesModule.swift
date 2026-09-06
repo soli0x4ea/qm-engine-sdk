@@ -63,9 +63,9 @@ struct IdenticalParticlesModule: SimModule {
     var charts: [ChartSpec] {
         [
             .lineSeries(LineSeriesSpec(
-                title: "自由电子态密度与费米能",
+                title: "自由电子态密度与费米能（对数轴）",
                 xAxis: .init(label: "E (eV)"),
-                yAxis: .init(label: "D(E) (态/J/m³)"),
+                yAxis: .init(label: "D(E) (态/J/m³)", scale: .log),
                 seriesNames: ["D(E)∝E^(1/2)"])),
             .lineSeries(LineSeriesSpec(
                 title: "HOM 符合率：全同 vs 非全同",
@@ -100,7 +100,7 @@ struct IdenticalParticlesModule: SimModule {
 
         let chart0 = LineSeriesData(
             spec: .init(xAxis: .init(label: "E (eV)"),
-                        yAxis: .init(label: "D(E) (态/J/m³)"),
+                        yAxis: .init(label: "D(E) (态/J/m³)", scale: .log),
                         seriesNames: ["D(E)∝E^(1/2)"]),
             series: [.init(name: "D(E)∝E^(1/2)",
                            points: Num.strided(E.map { $0 / eV }, D.map { $0 * eV },

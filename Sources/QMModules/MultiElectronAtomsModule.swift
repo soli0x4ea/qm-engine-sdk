@@ -133,8 +133,15 @@ struct MultiElectronAtomsModule: SimModule {
                            points: zip(zSeq, zeffs).map { Point(x: Double($0), y: $1) })],
             referenceLines: [ReferenceLine(
                 id: "sel", label: String(format: "%@ Z_eff = %.2f", element.symbol, zeff),
-                axis: .x, value: Double(element.z))])
+                axis: .x, value: Double(element.z))],
+            // W13（B3）：当前元素大圆点 + 符号气泡（视觉强化，替代单薄细参考线）
+            pointMarkers: [
+                PointMarker(x: Double(element.z), y: zeff,
+                            label: String(format: "%@ Z_eff = %.2f", element.symbol, zeff),
+                            colorIndex: 1),
+            ])
 
+        let i1Sel = element.z <= 20 ? i1[element.z - 1] : 0
         let noblePts = MultiElectronAtomsMath.nobleZ.map {
             Point(x: Double($0 + 1), y: i1[$0])
         }
@@ -152,7 +159,6 @@ struct MultiElectronAtomsModule: SimModule {
                 .init(name: "碱金属（谷）", points: alkaliPts, colorIndex: 2),
             ])
 
-        let i1Sel = element.z <= 20 ? i1[element.z - 1] : 0
         return SimResult(
             charts: [.lineSeries(chart0), .lineSeries(chart1)],
             summary: [

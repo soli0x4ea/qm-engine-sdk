@@ -120,12 +120,13 @@ struct KramersKronigModuleTests {
         let result = try await module.compute(
             ParamValues.defaults(for: module.params), constants: try constants())
 
-        #expect(result.charts.count == 2)
-        guard case .lineSeries(let c1) = result.charts[0],
-              case .lineSeries(let c2) = result.charts[1] else {
+        #expect(result.charts.count == 3)  // W13：ε₂ 吸收谱拆分独立成图
+        guard case .lineSeries(let c0) = result.charts[0],
+              case .lineSeries(let c1) = result.charts[1],
+              case .lineSeries(let c2) = result.charts[2] else {
             Issue.record("两图均应为曲线"); return
         }
-        #expect(c1.series.count == 3 && c2.series.count == 3)
+        #expect(c0.series.count == 1 && c1.series.count == 2 && c2.series.count == 3)
         #expect(c1.series.allSatisfy { $0.points.count == 600 })
         #expect(c2.series.allSatisfy { $0.points.count == 600 })
 

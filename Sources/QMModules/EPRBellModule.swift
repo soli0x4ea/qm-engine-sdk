@@ -82,8 +82,10 @@ enum EPRBellMath {
     /// （种子 = Python 脚本原值 42，序列不同分布相同，见 docs/RNG_SEED_POLICY.md）
     /// + Box-Muller 三维正态 → 单位矢量，S = −a·b + a·b' − a'·b − a'·b'。
     /// |S| ≤ 2√2 对自旋单态是数学必然（Tsirelson 定理），任意采样不得超出。
-    static func tsirelsonSampling(n: Int, seed: UInt64 = 42)
-        -> (maxS: Double, minS: Double, violations: Int) {
+    /// W13（B2）：keepSamples > 0 时沿样本序列等步长保留至多该数量的 S 值
+    /// （UI 采样分布散点用；N 越大覆盖越广，滑杆真实可见）。
+    static func tsirelsonSampling(n: Int, seed: UInt64 = 42, keepSamples: Int = 0)
+        -> (maxS: Double, minS: Double, violations: Int, samples: [Double]) {
         var rng = SplitMix64(seed: seed)
         var spare: Double? = nil
         // Box-Muller：缓存正态对的第二个样本
@@ -109,15 +111,18 @@ enum EPRBellMath {
         var vMax = -Double.infinity
         var vMin = Double.infinity
         var violations = 0
-        for _ in 0..<n {
+        var samples: [Double] = []
+        let stride = keepSamples > 0 ? max(1, n / keepSamples) : 0
+        for i in 0..<n {
             let a = randUnit(), ap = randUnit(), b = randUnit(), bp = randUnit()
             let s = -unitVectorDot(a, b) + unitVectorDot(a, bp)
                 - unitVectorDot(ap, b) - unitVectorDot(ap, bp)
             vMax = max(vMax, s)
             vMin = min(vMin, s)
             if abs(s) > tsirelson + 1e-9 { violations += 1 }
+            if stride > 0, i % stride == 0 { samples.append(s) }
         }
-        return (vMax, vMin, violations)
+        return (vMax, vMin, violations, samples)
     }
 }
 
@@ -176,6 +181,11 @@ struct EPRBellModule: SimModule {
                 xAxis: .init(label: "实测 CHSH 值 S"),
                 yAxis: .init(label: "年份"),
                 seriesNames: EPRBellExperiments.all.map(\.label))),
+            .scatter(ScatterSpec(
+                title: "Tsirelson 采样分布（N 次随机方向的 S 值，均匀抽样 ≤600 点）",
+                xAxis: .init(label: "样本序号"),
+                yAxis: .init(label: "CHSH 值 S"),
+                seriesNames: ["随机方向采样 S"])),
         ]
     }
 
@@ -210,8 +220,8 @@ struct EPRBellModule: SimModule {
             EPRBellMath.E_phipol(45 * d2r, 22.5 * d2r),
             EPRBellMath.E_phipol(45 * d2r, 67.5 * d2r))
 
-        // --- [4] Tsirelson 界随机采样（SplitMix64 定种子 42） ---
-        let sample = EPRBellMath.tsirelsonSampling(n: n)
+        // --- [4] Tsirelson 界随机采样（SplitMix64 定种子 42；W13 附带均匀抽样序列） ---
+        let sample = EPRBellMath.tsirelsonSampling(n: n, keepSamples: 600)
 
         // --- [4b] Bell 1964 原始不等式违反样例 ---
         let b1964 = EPRBellMath.bell1964()
@@ -233,6 +243,10 @@ struct EPRBellModule: SimModule {
                 ReferenceLine(label: "Tsirelson 界 −2√2", axis: .y, value: -EPRBellMath.tsirelson, style: .subtle),
                 ReferenceLine(label: String(format: "φ* = %.1f°", phiBest / d2r),
                               axis: .x, value: phiBest / d2r, style: .subtle),
+            ],
+            pointMarkers: [
+                PointMarker(x: phiBest / d2r, y: sBest,
+                            label: String(format: "φ* → %.3f", sBest)),
             ])
 
         // 图 2：光子偏振扫描（参考线：LHV 2、Tsirelson 2√2、θ*）
@@ -262,9 +276,24 @@ struct EPRBellModule: SimModule {
                 ReferenceLine(label: "Tsirelson 界 2√2", axis: .x, value: EPRBellMath.tsirelson),
             ])
 
+        // 图 4（W13/B2）：采样分布散点——N 滑杆的可见反馈（覆盖范围随 N 变化）
+        let chart4 = ScatterData(
+            spec: .init(xAxis: .init(label: "样本序号"),
+                        yAxis: .init(label: "CHSH 值 S"),
+                        seriesNames: ["随机方向采样 S"]),
+            series: [.init(name: "随机方向采样 S",
+                           points: sample.samples.enumerated().map {
+                               Point(x: Double($0.offset), y: $0.element)
+                           })],
+            referenceLines: [
+                ReferenceLine(label: "LHV 界 ±2", axis: .y, value: 2),
+                ReferenceLine(label: "−2", axis: .y, value: -2, style: .subtle),
+            ])
+
         let lhvMax = EPRBellMath.lhvMaxS()
         return SimResult(
-            charts: [.lineSeries(chart1), .lineSeries(chart2), .scatter(chart3)],
+            charts: [.lineSeries(chart1), .lineSeries(chart2),
+                     .scatter(chart3), .scatter(chart4)],
             summary: [
                 .init(id: "lhv", title: "LHV 枚举界",
                       value: String(format: "max|S| = %.4f", lhvMax),

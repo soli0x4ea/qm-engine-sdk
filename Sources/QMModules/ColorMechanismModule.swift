@@ -53,14 +53,14 @@ struct ColorVibrationalCouplingModule: SimModule {
             .lineSeries(LineSeriesSpec(
                 title: "d-d 跃迁相对强度 vs 奇宇称振动耦合强度 ξ",
                 xAxis: .init(label: "振动耦合强度 ξ (无量纲，示意)"),
-                yAxis: .init(label: "相对强度 I(ξ)"),
+                yAxis: .init(label: "相对强度 I(ξ)（log）", scale: .log),
                 seriesNames: ["I(ξ) = ξ²/(ξ²+ξ₀²)"])),
         ]
     }
 
     func compute(_ input: ParamValues, constants: ConstantsSet) async throws -> SimResult {
         let xi0 = input.slider("xi0")
-        let xi = Num.linspace(0.0, 3.0, count: 600)
+        let xi = Num.linspace(1e-3, 3.0, count: 600)  // W13(C1)：起点 1e-3 保证 log 轴全正，低 ξ 的 ξ² 幂律段可见
         let I = xi.map { ColorMechanismMath.relativeIntensity(xi: $0, xi0: xi0) }
         let area = Num.trapezoid(xi, I)
 
@@ -77,7 +77,13 @@ struct ColorVibrationalCouplingModule: SimModule {
                         .init(name: "I(ξ) = ξ²/(ξ²+ξ₀²)",
                               points: Num.strided(xi, I, stride: 1)),
                     ],
-                    referenceLines: refLines)),
+                    referenceLines: refLines,
+                    // W13（B3）：ξ₀ 半强度交点大圆点（阈值线视觉强化）
+                    pointMarkers: [
+                        PointMarker(x: xi0, y: 0.5,
+                                    label: String(format: "ξ₀ = %.2f, I = 0.5", xi0),
+                                    colorIndex: 1),
+                    ])),
             ],
             summary: [
                 .init(id: "half", title: "半强度点 I(ξ₀)=0.5",

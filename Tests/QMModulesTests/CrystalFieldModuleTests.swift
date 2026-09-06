@@ -191,7 +191,7 @@ struct CrystalFieldModuleTests {
         let chart = try #require(chartLineSeries(result, 0))
         #expect(chart.series.count == 4)
         for s in chart.series { #expect(s.points.count == 600) }
-        #expect(chart.referenceLines.count == 1)
+        #expect(chart.referenceLines.count == 2)  // W13：+当前工作点参考线
         #expect(result.summary.count == 4)
         #expect(result.theory?.formulas.count == 4)
         try await expectComputeUnderBudget(module: module, values: values,
