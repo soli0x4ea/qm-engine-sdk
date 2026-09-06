@@ -73,32 +73,52 @@ enum PerturbationVariationMath {
         return -4.0 * nf * lf / (.pi * .pi * pow(nf * nf - lf * lf, 2))
     }
 
-    /// (B) 氦原子单参变分：E(α) = α² − 2Zα + (5/8)α（原子单位，Z = 2）。
+    /// (B) 类氦离子单参变分：E(α) = α² − 2Zα + (5/8)α（原子单位）。
     static func heliumEnergy(_ alpha: Double, z: Double = 2.0) -> Double {
         alpha * alpha - 2.0 * z * alpha + 0.625 * alpha
     }
 
-    /// 变分解析最优：α* = 27/16，E(α*) = −2.847656 Ha。
-    static let heliumAlphaOpt = 27.0 / 16.0
+    /// 变分解析最优：α*(Z) = Z − 5/16，E(α*) = −(Z−5/16)²。
+    static func heliumAlphaOpt(z: Double) -> Double { z - 5.0 / 16.0 }
+
+    /// 类氦离子（1s²）非相对论精确基态能量（Ha，无限核质量；Pekeris 型高精度变分）。
+    /// 上界自检：E*(Z) = −(Z−5/16)² 恒在精确值之上（H⁻ −0.4727 > −0.5278 ✓ …）。
+    static let heliumLikeExactHa: [Double: Double] = [
+        1: -0.5277510165,    // H⁻
+        2: -2.9037243770,    // He（脚本常数）
+        3: -7.2799134127,    // Li⁺
+        4: -13.6555662400,   // Be²⁺
+    ]
 }
 
 // MARK: - 模块
 
 /// 笔记 19《微扰论与变分法》：非谐振子二阶微扰 vs 精确对角化（40² 基底）+
-/// 方势阱线性斜坡（渐近级数证据）+ 氦原子单参变分（400 点扫描，上界定理）。秒级档。
+/// 方势阱线性斜坡（渐近级数证据）+ 类氦离子单参变分（400 点扫描，上界定理）。秒级档。
 struct PerturbationVariationModule: SimModule {
 
     let meta = ModuleMeta(
         id: "微扰论与变分法_方势阱与氦变分", title: "微扰论与变分法 · 微扰展开与氦变分",
-        subtitle: "40² 谐振子基底微扰 vs 精确谱 + 方势阱斜坡 + 氦变分上界",
+        subtitle: "40² 谐振子基底微扰 vs 精确谱 + 方势阱斜坡 + 类氦变分上界（Z = 1…4）",
         category: .formalTheory, noteNumber: 19, tier: .seconds, difficulty: .advanced,
-        keywords: ["微扰论", "变分法", "非谐振子", "氦原子", "上界定理", "渐近级数",
+        keywords: ["微扰论", "变分法", "非谐振子", "氦原子", "类氦离子", "上界定理", "渐近级数",
                    " Rayleigh-Schrodinger", "变分原理", "方势阱"])
 
     var params: [ParamSpec] {
         [
             .slider(SliderSpec(key: "lam", title: "微扰强度 λx⁴", symbol: "λ", unit: "",
                                range: 0.01...0.2, defaultValue: 0.1, decimalPlaces: 3)),
+            // W13i 真机反馈 #19：氦变分图与 λ 无关，拖滑杆纹丝不动——给它自己的参数：
+            // 类氦离子核电荷数，E(α) = α² − (2Z−5/8)α 抛物线随 Z 平移，极小随之走。
+            .discrete(DiscreteSpec(
+                key: "heliumZ", title: "类氦离子（核电荷数 Z）",
+                options: [
+                    .init(id: "1", title: "H⁻（Z = 1）", subtitle: "单参变分偏差最大 ~10%"),
+                    .init(id: "2", title: "He（Z = 2）", subtitle: "脚本口径，精确 −2.903724 Ha"),
+                    .init(id: "3", title: "Li⁺（Z = 3）", subtitle: "偏差收窄至 ~0.8%"),
+                    .init(id: "4", title: "Be²⁺（Z = 4）", subtitle: "α* = 3.6875"),
+                ],
+                defaultOptionID: "2")),
         ]
     }
 
@@ -117,8 +137,8 @@ struct PerturbationVariationModule: SimModule {
                 yAxis: .init(label: "基态能量 E（ħ = ω = m = 1）"),
                 seriesNames: ["仅到一阶 E⁰+E¹", "二阶微扰 E⁰+E¹+E²", "精确对角化"])),
             .lineSeries(LineSeriesSpec(
-                title: "氦原子变分：E(α) = α² − (27/8)α（单参乘积试探波函数）",
-                xAxis: .init(label: "有效核电荷 α"),
+                title: "类氦离子变分：E(α) = α² − (2Z−5/8)α（单参乘积试探波函数）",
+                xAxis: .init(label: "变分参数 α（有效核电荷）"),
                 yAxis: .init(label: "变分能量 E (Hartree)"),
                 seriesNames: ["E(α) 扫描"])),
         ]
@@ -128,6 +148,11 @@ struct PerturbationVariationModule: SimModule {
         let hartreeEv = try constants.value("Ehartree_eV")
         let lam = input.slider("lam")
         let nB = PerturbationVariationMath.basisSize
+        // W13i #19：类氦离子核电荷数（离散参数，缺省 He）
+        let zHelium = Double(input.discrete("heliumZ")) ?? 2.0
+        let alphaOpt = PerturbationVariationMath.heliumAlphaOpt(z: zHelium)
+        let eOpt = PerturbationVariationMath.heliumEnergy(alphaOpt, z: zHelium)
+        let heExact = PerturbationVariationMath.heliumLikeExactHa[zHelium]
 
         let progress = ComputeProgress()
         let payload = try await SecondsChannel.run(progress: progress)
@@ -177,13 +202,17 @@ struct PerturbationVariationModule: SimModule {
             let rampFirst = rampE0 + lamRamp / 2.0
             try Task.checkCancellation()
 
-            progress.update(0.85, phase: "氦变分扫描（\(PerturbationVariationMath.variationalScanPoints) 点）")
+            progress.update(0.85, phase: "类氦变分扫描（\(PerturbationVariationMath.variationalScanPoints) 点）")
+            // 扫描窗随 α*(Z) 居中（±0.7）：抛物线极小恒在图中央，Z 切换即见平移
+            let alphaLo = max(0.05, alphaOpt - 0.7)
+            let alphaHi = alphaOpt + 0.7
             var heScan: [Point] = []
             var minE = Double.infinity
             var minAlpha = 0.0
             for i in 0..<PerturbationVariationMath.variationalScanPoints {
-                let alpha = 1.0 + 1.2 * Double(i) / Double(PerturbationVariationMath.variationalScanPoints - 1)
-                let e = PerturbationVariationMath.heliumEnergy(alpha)
+                let alpha = alphaLo + (alphaHi - alphaLo) * Double(i)
+                    / Double(PerturbationVariationMath.variationalScanPoints - 1)
+                let e = PerturbationVariationMath.heliumEnergy(alpha, z: zHelium)
                 heScan.append(Point(x: alpha, y: e))
                 if e < minE { minE = e; minAlpha = alpha }
             }
@@ -191,9 +220,6 @@ struct PerturbationVariationModule: SimModule {
                     heScan, minAlpha, minE, e1Scan, pertScan, exactScan)
         }
 
-        let alphaOpt = PerturbationVariationMath.heliumAlphaOpt
-        let eOpt = PerturbationVariationMath.heliumEnergy(alphaOpt)
-        let eExact = PerturbationVariationMath.heliumExactHa
         let chart0Series: [SeriesPoints] = {
             var s = [SeriesPoints(name: "相对误差扫描", points: payload.errs)]
             if let cur = payload.cur { s.append(SeriesPoints(name: "当前 λ", points: [cur])) }
@@ -213,19 +239,21 @@ struct PerturbationVariationModule: SimModule {
             ],
             referenceLines: [ReferenceLine(label: String(format: "当前 λ = %.3f", lam),
                                            axis: .x, value: lam, style: .subtle)])
+        // W13i #19 布局修订：α* 竖线 + E* 横线两条参考线换成极小点实心标记（消除底部
+        // 标注挤压），只保留精确值横线做上界对照；扫描窗随 Z 居中，抛物线不再偏居一侧。
         let chart1 = LineSeriesData(
             spec: charts[2].lineSeriesSpec!,
             series: [.init(name: "E(α) 扫描", points: payload.heScan)],
             referenceLines: [
-                ReferenceLine(label: String(format: "α* = 27/16 = %.4f", alphaOpt),
-                              axis: .x, value: alphaOpt),
-                ReferenceLine(label: String(format: "变分极小 %.4f Ha", payload.heMinE),
-                              axis: .y, value: payload.heMinE, style: .subtle),
-                ReferenceLine(label: String(format: "精确非相对论 %.4f Ha", eExact),
-                              axis: .y, value: eExact, style: .subtle),
+                ReferenceLine(label: String(format: "精确非相对论 %.4f Ha", heExact ?? .nan),
+                              axis: .y, value: heExact ?? .nan),
+            ],
+            pointMarkers: [
+                PointMarker(x: alphaOpt, y: eOpt,
+                            label: String(format: "α* = %.4f → E* = %.4f Ha", alphaOpt, eOpt)),
             ])
 
-        let upperBound = payload.heMinE > eExact
+        let upperBound = heExact != nil && payload.heMinE > heExact!
         return SimResult(
             charts: [.lineSeries(chart0), .lineSeries(chartE), .lineSeries(chart1)],
             summary: [
@@ -238,14 +266,16 @@ struct PerturbationVariationModule: SimModule {
                                    + "（一阶高估 ~2×，高阶吃掉一半）",
                                    payload.rampExact, payload.rampFirst,
                                    (payload.rampNumeric - payload.rampExact) / (payload.rampFirst - payload.rampExact))),
-                .init(id: "hemin", title: "氦变分极小",
+                .init(id: "hemin", title: String(format: "类氦变分极小（Z=%.0f）", zHelium),
                       value: String(format: "α=%.4f, E=%.6f Ha", payload.heMinAlpha, payload.heMinE),
-                      note: String(format: "解析 α* = 1.6875, E* = %.6f Ha", eOpt)),
+                      note: String(format: "解析 α* = Z−5/16 = %.4f, E* = %.6f Ha", alphaOpt, eOpt)),
                 .init(id: "ub", title: "上界定理",
                       value: upperBound ? "满足（E_var > E_exact）" : "违反！",
-                      note: String(format: "精确非相对论 %.6f Ha，变分相对偏差 %.2f%%",
-                                   eExact, abs(eOpt - eExact) / abs(eExact) * 100)),
-                .init(id: "heev", title: "氦变分极小（eV）",
+                      note: heExact != nil
+                          ? String(format: "精确非相对论 %.6f Ha（Pekeris 型），变分相对偏差 %.2f%%",
+                                   heExact!, abs(eOpt - heExact!) / abs(heExact!) * 100)
+                          : "该 Z 无精确参考值"),
+                .init(id: "heev", title: "类氦变分极小（eV）",
                       value: String(format: "%.3f eV", payload.heMinE * hartreeEv),
                       note: "Hartree → eV（CODATA）"),
             ],
@@ -255,11 +285,12 @@ struct PerturbationVariationModule: SimModule {
                     "Rayleigh-Schrödinger：E = E⁰ + λ⟨X⁴⟩ + λ²Σ|X⁴₀ₘ|²/(E⁰₀−E⁰ₘ) + …",
                     "方势阱斜坡 V = λx：一阶位移 λ⟨x⟩ = λ/2 对所有态相同；级数渐近发散",
                     "变分：E(α) = ⟨ψ_α|H|ψ_α⟩ ≥ E₀ 对任意试探态成立（上界定理）",
-                    "氦单参：ψ = φ_α(r₁)φ_α(r₂)，E(α) = α² − (27/8)α，α* = 27/16",
+                    "类氦单参：ψ = φ_α(r₁)φ_α(r₂)，E(α) = α² − (2Z−5/8)α，α* = Z − 5/16",
+                    "精确值（H⁻/He/Li⁺/Be²⁺）：变分间隙 = 电子关联能，单参乘积波函数无法覆盖",
                 ],
                 reading: "微扰侧：λ 小处相对误差 ~10⁻³ 且随 λ 单调恶化——截断级数只在"
                     + "收敛域内可信；斜坡例展示渐近级数「一阶高估 ~2×、高阶收回一半」。"
-                    + "变分侧：E(α) 抛物线极小 −2.8477 Ha 永远压在精确值 −2.9037 Ha 之上，"
-                    + "这是上界定理的直接图形化。"))
+                    + "变分侧：切换类氦离子 Z，抛物线 E(α) 随 Z 平移、极小点恒在图中央；"
+                    + "E* = −(Z−5/16)² 永远压在精确值（虚线）之上——这是上界定理的直接图形化。"))
     }
 }

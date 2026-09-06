@@ -91,7 +91,7 @@ struct PerturbationVariationModuleTests {
         }
         #expect(minE > eExact, "变分极小 \(minE) 应严格大于 \(eExact)")
         // 解析极小：α* = 27/16，E* = (27/16)² − 4·(27/16) + (5/8)(27/16) = −2.84765625（float64 精确）
-        let eOpt = PerturbationVariationMath.heliumEnergy(PerturbationVariationMath.heliumAlphaOpt)
+        let eOpt = PerturbationVariationMath.heliumEnergy(PerturbationVariationMath.heliumAlphaOpt(z: 2.0))
         #expect(abs(eOpt + 2.84765625) < 1e-12)
         for alpha in stride(from: 1.0, through: 2.2, by: 0.05) {
             #expect(PerturbationVariationMath.heliumEnergy(alpha) >= eOpt - 1e-12)
@@ -99,6 +99,23 @@ struct PerturbationVariationModuleTests {
         // 相对偏差 |E*−E_exact|/|E_exact| = 1.93125%（脚本口径取绝对值）
         let rel = abs(eOpt - eExact) / abs(eExact)
         #expect(abs(rel - 0.0193125) < 1e-5, "相对偏差 = \(rel)")
+    }
+
+    @Test("W13i 物理律：类氦 Z 扫描——四个离子的变分极小均压住精确值（上界定理逐 Z 成立）")
+    func heliumLikeUpperBoundPerZ() {
+        // 精确值（Pekeris 型，无限核质量）：H⁻/He/Li⁺/Be²⁺
+        let exact: [Double: Double] = [1: -0.5277510165, 2: -2.9037243770,
+                                       3: -7.2799134127, 4: -13.6555662400]
+        for (z, ex) in exact {
+            let aOpt = PerturbationVariationMath.heliumAlphaOpt(z: z)
+            let eOpt = PerturbationVariationMath.heliumEnergy(aOpt, z: z)
+            #expect(abs(aOpt - (z - 5.0 / 16.0)) < 1e-12)
+            #expect(abs(eOpt - (-(z - 5.0 / 16.0) * (z - 5.0 / 16.0))) < 1e-12,
+                    "E*(Z=\(z)) = \(eOpt)")
+            #expect(eOpt > ex, "Z=\(z)：变分 \(eOpt) 应 > 精确 \(ex)")
+            #expect(abs(PerturbationVariationMath.heliumLikeExactHa[z]! - ex) < 1e-9,
+                    "模块内建精确表 Z=\(z) 与测试锚点不一致")
+        }
     }
 
     // MARK: fixtures 对拍
@@ -144,10 +161,39 @@ struct PerturbationVariationModuleTests {
         #expect(cE.series[0].name.contains("一阶") && cE.series[2].name.contains("精确"))
         #expect(cE.referenceLines.count == 1 && cE.referenceLines[0].axis == .x)
         #expect(c1.series[0].points.count == 400)
-        #expect(c1.referenceLines.count == 3)
+        #expect(c1.referenceLines.count == 1)
+        #expect(abs(c1.referenceLines[0].value - (-2.9037243770)) < 1e-8, "He 精确线")
+        #expect(c1.pointMarkers.count == 1)
+        #expect(abs(c1.pointMarkers[0].x - 27.0 / 16.0) < 1e-12, "α* = 1.6875")
+        #expect(abs(c1.pointMarkers[0].y - (-2.84765625)) < 1e-6, "E* = −2.847656")
         #expect(result.summary.count == 5)
         #expect(result.summary[3].value.contains("满足"), "上界定理成立")
-        #expect(result.theory?.formulas.count == 4)
+        #expect(result.theory?.formulas.count == 5)
+    }
+
+    @Test("W13i #19：Z 联动——Be²⁺（Z=4）扫描窗移到 α*±0.7、极小点随迁、上界仍成立")
+    func computeHeliumZLinkage() async throws {
+        let module = PerturbationVariationModule()
+        var values = ParamValues.defaults(for: module.params)
+        values.discretes["heliumZ"] = "4"
+        let result = try await module.compute(values, constants: try constants())
+        guard case .lineSeries(let c1) = result.charts[2] else {
+            Issue.record("氦图应为 lineSeries"); return
+        }
+        // 扫描窗 [α*−0.7, α*+0.7] = [2.9875, 4.3875]，400 点
+        let scan = c1.series[0].points
+        #expect(scan.count == 400)
+        #expect(abs(scan[0].x - 2.9875) < 1e-12 && abs(scan[399].x - 4.3875) < 1e-12)
+        // 极小点：α* = 3.6875，E* = −13.597656
+        #expect(abs(c1.pointMarkers[0].x - 3.6875) < 1e-12)
+        #expect(abs(c1.pointMarkers[0].y - (-13.59765625)) < 1e-6)
+        // 精确线换成 Be²⁺ 值
+        #expect(abs(c1.referenceLines[0].value - (-13.6555662400)) < 1e-8)
+        // 扫描极小 > 精确（上界）
+        let minScan = scan.map { $0.y }.min()!
+        #expect(minScan > -13.6555662400)
+        #expect(result.summary[2].title.contains("Z=4"))
+        #expect(result.summary[3].value.contains("满足"))
     }
 
     @Test("W13g 物理律：能量级数排序——E⁰¹² < E_exact < E¹ 全扫描域成立（E²<0，一阶高估）")

@@ -19,13 +19,13 @@ struct HydrogenRadialModuleTests {
     }
 
     /// 脚本口径单 l 求解：返回内点网格（a₀ 单位）+ 前 k 能量（eV）+ 归一化 u + 密度。
-    private func solve(l: Int, rMaxNm: Double, count k: Int = 5) throws
+    private func solve(l: Int, rMaxNm: Double, count k: Int = 5, z: Double = 1) throws
         -> (rA0: [Double], eV: [Double], u: [[Double]], density: [[Double]]) {
         let p = try phys()
         let c = try constants()
         let s = HydrogenRadialMath.solveLowest(
             l: l, rMax: rMaxNm * 1.0e-9, points: HydrogenRadialMath.steps,
-            count: k, mu: p.mu, hbar: p.hbar, eCharge: p.e, eps0: p.eps0)
+            count: k, mu: p.mu, hbar: p.hbar, eCharge: p.e, eps0: p.eps0, z: z)
         let a0 = HydrogenRadialMath.bohrRadius(mu: p.mu, eCharge: p.e, eps0: p.eps0, hbar: p.hbar)
         let eCharge = try c.value("e")
         let m = HydrogenRadialMath.steps - 1
@@ -76,6 +76,24 @@ struct HydrogenRadialModuleTests {
             let rel = abs(s0.eV[i0] - s1.eV[i1]) / abs(s0.eV[i0])
             #expect(rel < 1e-4, "E(l=0)[\(i0)] vs E(l=1)[\(i1)] 相对差 \(rel)")
         }
+    }
+
+    @Test("物理律：Z² 标度——z=2 数值能级 ≈ 4× 氢能级（rel < 1e-3），1s 密度峰收缩到 a₀/4")
+    func chargeScaling() throws {
+        let p = try phys()
+        let ryEv = HydrogenRadialMath.rydberg(mu: p.mu, eCharge: p.e, eps0: p.eps0, hbar: p.hbar) / p.e
+        let s1 = try solve(l: 0, rMaxNm: 3.0, count: 1)
+        let s2 = try solve(l: 0, rMaxNm: 3.0, count: 1, z: 2)
+        // E₁(Z=2) = 4·E₁(Z=1) = −54.39 eV（约化质量）。FD 误差 ~O(h)，Z=2 时网格在
+        // a_eff = a₀/2 单位下粗一倍 → 误差 ~4×（1.07e-3 vs 2.7e-4），容差取 2e-3
+        let rel = abs(s2.eV[0] - 4.0 * s1.eV[0]) / abs(s1.eV[0])
+        #expect(rel < 2e-3, "E₁(Z=2)=\(s2.eV[0]) vs 4×\(s1.eV[0])（rel \(rel)）")
+        #expect(abs(s2.eV[0] - (-4.0 * ryEv)) < 0.05, "He⁺ E₁ = \(s2.eV[0]) eV")
+        // 1s 密度（脚本口径 u²/r ∝ r·e^{−2Zr/a₀}）峰在 r = a₀/(2Z)：Z=2 → 0.25 a₀
+        // （网格 h ≈ 0.019 a₀，容差 3 格）
+        let peak = s2.density[0].enumerated().max { $0.element < $1.element }!.offset
+        let peakA0 = s2.rA0[peak]
+        #expect(abs(peakA0 - 0.25) < 0.06, "1s 峰位 \(peakA0) a₀ ≠ 0.25 a₀")
     }
 
     @Test("物理律：u 节点数 = n−l−1（九态全查）")
@@ -146,7 +164,7 @@ struct HydrogenRadialModuleTests {
 
     // MARK: compute 结构与预算
 
-    @Test("compute 输出结构：2 图（9 系列密度 + 能量对照）+ 摘要 5 条 + 理论卡 4 式")
+    @Test("compute 输出结构：2 图（9 系列密度 + 能量对照）+ 摘要 5 条 + 理论卡 5 式；默认无箱壁线")
     func computeStructure() async throws {
         let module = HydrogenRadialModule()
         let result = try await module.compute(
@@ -158,13 +176,55 @@ struct HydrogenRadialModuleTests {
         }
         #expect(c0.series.count == 9)
         #expect(c0.series.allSatisfy { $0.points.count <= 512 })
-        // W13g #17：显示窗裁剪到脚本 xlim(0, 25) a₀
+        // W13g #17：显示窗裁剪到脚本 xlim(0, 25) a₀（Z=1 口径）
         #expect(c0.series.allSatisfy { $0.points.allSatisfy { $0.x <= 25.0 } })
         #expect(c0.series.allSatisfy { $0.points.count >= 150 }, "窗内采样过稀？")
+        // W13i #17：默认 rmax=3nm（56.7 a₀）在窗外 → 无箱壁参考线
+        #expect(c0.referenceLines.isEmpty, "默认箱壁在窗外，不应有参考线")
         #expect(c1.series.count == 2 && c1.series[0].points.count == 5)
         #expect(result.summary.count == 5)
         #expect(result.summary[4].value.contains("n=1,l=0:0"))
-        #expect(result.theory?.formulas.count == 4)
+        #expect(result.theory?.formulas.count == 5)
+    }
+
+    @Test("W13i #17：Z=2 联动——密度窗收缩到 12.5 a₀、解析能级 ×4、1s 峰位 a₀/2、无箱壁线")
+    func computeChargeLinkage() async throws {
+        let module = HydrogenRadialModule()
+        var values = ParamValues.defaults(for: module.params)
+        values.sliders["z"] = 2
+        let result = try await module.compute(values, constants: try constants())
+        guard case .lineSeries(let c0) = result.charts[0],
+              case .lineSeries(let c1) = result.charts[1] else {
+            Issue.record("应为 2 lineSeries"); return
+        }
+        #expect(c0.series.allSatisfy { $0.points.allSatisfy { $0.x <= 12.5 } })
+        #expect(c0.series.allSatisfy { $0.points.count >= 100 }, "窄窗采样过稀？")
+        #expect(c0.referenceLines.isEmpty, "rmax=3nm=56.7a₀ 远在 12.5 a₀ 窗外")
+        // 解析曲线首点 E₁ = −Z²Ry（约化质量 ≈ −54.39 eV）
+        let p = try phys()
+        let ryEv = HydrogenRadialMath.rydberg(mu: p.mu, eCharge: p.e, eps0: p.eps0, hbar: p.hbar) / p.e
+        let e1 = c1.series[0].points[0].y
+        #expect(abs(e1 - (-4.0 * ryEv)) < 0.05, "解析 E₁(Z=2) = \(e1) eV")
+        // 摘要卡：Z²Ry 与 a₀/Z 生效
+        #expect(result.summary[1].value.contains("54.3"), "Z²Ry 卡 = \(result.summary[1].value)")
+        // 1s 密度（u²/r 口径）峰 ≈ a₀/(2Z) = 0.25 a₀
+        let peak = c0.series[0].points.enumerated().max { $0.element.y < $1.element.y }!.element.x
+        #expect(abs(peak - 0.25) < 0.08, "1s 峰位 \(peak) a₀ ≠ 0.25 a₀")
+    }
+
+    @Test("W13i #17：固定箱宽 1nm——箱壁参考线出现在窗内（x ≈ 18.9 a₀）")
+    func boxWallReference() async throws {
+        let module = HydrogenRadialModule()
+        var values = ParamValues.defaults(for: module.params)
+        values.sliders["rmax"] = 1.0
+        let result = try await module.compute(values, constants: try constants())
+        guard case .lineSeries(let c0) = result.charts[0] else {
+            Issue.record("图 1 应为 lineSeries"); return
+        }
+        #expect(c0.referenceLines.count == 1, "箱壁应落在 25 a₀ 窗内")
+        let wall = try #require(c0.referenceLines.first)
+        #expect(wall.axis == .x)
+        #expect(abs(wall.value - 18.9) < 0.2, "箱壁位置 \(wall.value) a₀")
     }
 
     @Test("秒级档预算：compute < 2000 ms（收尾包 1 走三对角 dstevr 后 ~50 ms，强制口径）")
