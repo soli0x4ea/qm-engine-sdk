@@ -29,7 +29,9 @@ enum QFTBasicsMath {
 
     /// 一维单原子链模式波矢 k_m = 2π m/(N a)（m = −N/2 … N/2−1）。
     static func waveVectors(N: Int, a: Double) -> [Double] {
-        (-(N / 2)..<(N / 2)).map { 2.0 * .pi * Double($0) / (Double(N) * a) }
+        let twoPi = 2.0 * Double.pi
+        let lattice = Double(N) * a
+        return (-(N / 2)..<(N / 2)).map { m in twoPi * Double(m) / lattice }
     }
 
     /// 声学支色散 ω_k = 2(v/a)|sin(k a/2)|（式 5）。
