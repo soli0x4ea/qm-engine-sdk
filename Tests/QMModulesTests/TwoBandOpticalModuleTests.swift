@@ -133,7 +133,8 @@ struct TwoBandOpticalModuleTests {
             let back1 = p.n[i] * p.n[i] - p.kappa[i] * p.kappa[i]
             #expect(abs(back1 - p.eps1[i]) / max(abs(p.eps1[i]), 1e-300) < 1e-12,
                     "w = \(p.w[i])：n²−κ² ≠ ε₁")
-            let back2 = 2.0 * p.n[i] * p.kappa[i]
+            let twoNK = 2.0 * p.n[i]
+            let back2 = twoNK * p.kappa[i]
             #expect(abs(back2 - p.eps2[i]) / max(abs(p.eps2[i]), 1e-300) < 1e-12,
                     "w = \(p.w[i])：2nκ ≠ ε₂")
         }

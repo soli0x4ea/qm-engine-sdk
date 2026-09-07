@@ -95,7 +95,10 @@ struct PathIntegralModuleTests {
         var normNum = 0.0
         for p in psiT { normNum += p * p }
         var normAna = 0.0
-        for s in 0..<200 { normAna += c[s] * c[s] * exp(-2.0 * w[s] * t) }
+        for s in 0..<200 {
+            let decay = exp(-2.0 * w[s] * t)
+            normAna += c[s] * c[s] * decay
+        }
         #expect(abs(normNum - normAna) / normAna < 1e-12,
                 "范数恒等式：\(normNum) vs \(normAna)")
         // 归一化后连续积分恒 1

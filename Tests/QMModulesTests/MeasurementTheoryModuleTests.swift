@@ -72,8 +72,10 @@ struct MeasurementTheoryModuleTests {
                     + (1 - Self.alpha2) * fullMinus[j] * fullMinus[j]
                 if probs[j] > peak { peak = probs[j] }
             }
-            let actual = (0..<fx_.count).map { j in
-                (Self.alpha2 * plus[j] * plus[j] + (1 - Self.alpha2) * minus[j] * minus[j]) / peak
+            let actual = (0..<fx_.count).map { (j: Int) -> Double in
+                let wPlus = Self.alpha2 * plus[j] * plus[j]
+                let wMinus = (1.0 - Self.alpha2) * minus[j] * minus[j]
+                return (wPlus + wMinus) / peak
             }
             expectPointwiseClose(actual, fy, tolerance: 1e-6, "指针耦合 λ=\(lam)")
         }

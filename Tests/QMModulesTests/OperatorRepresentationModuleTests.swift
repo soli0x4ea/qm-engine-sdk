@@ -50,7 +50,9 @@ struct OperatorRepresentationModuleTests {
         for i in p.indices {
             let ap = abs(p[i])
             if ap <= 1.5 {
-                let closed = s / .pi.squareRoot() * exp(-s * s * p[i] * p[i])
+                let gaussian = exp(-s * s * p[i] * p[i])
+                let invSqrtPi = 1.0 / Double.pi.squareRoot()
+                let closed = s * invSqrtPi * gaussian
                 #expect(abs(phi2[i] - closed) / closed < 1e-6,
                         "第\(i)点 p=\(p[i]) \(phi2[i]) vs \(closed)")
                 checked += 1
