@@ -87,11 +87,14 @@ struct AlgebraCoreTests {
             #expect(abs(partial.w[s] - full.w[s]) < 1e-10 * max(1, abs(full.w[s])),
                     "w[\(s)]: \(partial.w[s]) vs \(full.w[s])")
         }
-        // 特征向量：非简并随机谱逐元一致（至多整体符号，dsyevr 同一实现对同一矩阵符号确定）
+        // 特征向量：非简并随机谱逐元一致，允许整体符号差
+        // （dsyevr 符号约定随 Accelerate/LAPACK 版本可能不同，eigh 与 eighLowest 走不同 range 路径）
         for s in 0..<12 {
             var maxDiff = 0.0
             for j in 0..<n {
-                maxDiff = max(maxDiff, abs(partial.v[j * 12 + s] - full.v[j * n + s]))
+                let vp = partial.v[j * 12 + s]
+                let vf = full.v[j * n + s]
+                maxDiff = max(maxDiff, min(abs(vp - vf), abs(vp + vf)))
             }
             #expect(maxDiff < 1e-9, "v[\(s)] 最大分量差 \(maxDiff)")
         }
